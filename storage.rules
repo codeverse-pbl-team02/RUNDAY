@@ -1,0 +1,7 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Upload functionality is not enabled yet. Add explicit type/size/owner rules when implementing it.
+    match /{allPaths=**} { allow read, write: if false; }
+  }
+}

@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner(uid) { return request.auth != null && request.auth.uid == uid; }
+    function recent(uid) {
+      return owner(uid) && request.auth.token.auth_time is int
+        && request.auth.token.auth_time >= request.time.toMillis() / 1000 - 300;
+    }
+    function active(uid) {
+      return owner(uid) && exists(/databases/$(database)/documents/rundayUsers/$(uid))
+        && get(/databases/$(database)/documents/rundayUsers/$(uid)).data.get('deleting', false) == false;
+    }
+    function validProfile() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['displayName', 'bio', 'email', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['displayName', 'bio', 'email', 'createdAt', 'updatedAt', 'deleting'])
+        && data.displayName is string && data.displayName.size() > 0 && data.displayName.size() <= 30
+        && data.email is string && data.email == request.auth.token.email
+        && data.bio is string && data.bio.size() <= 100
+        && data.updatedAt == request.time;
+    }
+    match /rundayUsers/{uid} {
+      allow get: if owner(uid);
+      allow create: if owner(uid) && validProfile() && !request.resource.data.keys().hasAny(['deleting'])
+        && request.resource.data.createdAt == request.time;
+      allow update: if owner(uid) && validProfile() && request.resource.data.createdAt == resource.data.createdAt
+        && ((resource.data.get('deleting', false) == false && !request.resource.data.keys().hasAny(['deleting']))
+          || (recent(uid) && request.resource.data.deleting == true
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deleting', 'updatedAt'])));
+      allow delete: if recent(uid);
+      allow list: if false;
+      match /runs/{runId} {
+        allow read: if owner(uid);
+        allow create: if active(uid)
+          && request.resource.data.keys().hasAll(['startedAt', 'durationSeconds', 'distanceMeters', 'points', 'createdAt'])
+          && request.resource.data.keys().hasOnly(['startedAt', 'durationSeconds', 'distanceMeters', 'points', 'createdAt'])
+          && request.resource.data.startedAt is number && request.resource.data.startedAt > 0
+          && request.resource.data.startedAt <= request.time.toMillis() + 60000
+          && request.resource.data.durationSeconds is int && request.resource.data.durationSeconds >= 1 && request.resource.data.durationSeconds <= 86400
+          && request.resource.data.distanceMeters is int && request.resource.data.distanceMeters >= 0 && request.resource.data.distanceMeters <= 1000000
+          && request.resource.data.points is list && request.resource.data.points.size() >= 1 && request.resource.data.points.size() <= 3000
+          && request.resource.data.createdAt == request.time;
+        allow update: if false;
+        allow delete: if recent(uid);
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

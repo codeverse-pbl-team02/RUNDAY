@@ -1,0 +1,10 @@
+{
+  "description": "This web application offers a seamless user experience for Android devices, providing essential features optimized for mobile screens to enhance accessibility and engagement.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

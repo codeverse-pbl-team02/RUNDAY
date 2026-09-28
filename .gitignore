@@ -1,0 +1,93 @@
+node_modules/
+dist/
+build/
+.cache/
+.env*
+.vite/
+vite.config.*.timestamp-*
+*.tsbuildinfo
+*-debug.log*
+logs/
+*.log
+.claude-replay.*
+.tmp-*
+/.figma/design-context/
+
+# Platform-managed agentplat state, not project source. In the
+# client-initiated single-repo workspace layout (make's `Path: "."` spec) the
+# repo root IS the workspace root, so these land inside this repo rather than
+# beside it.
+/.plugins/
+/.opencode-skills/
+
+# Keep the Firebase configuration template tracked.
+!.env.example
+functions/lib/
+
+# Local secrets and credentials (never commit real values in example files).
+.secret.local
+.secrets*
+secrets/
+credentials/
+serviceAccount*.json
+service-account*.json
+*-firebase-adminsdk-*.json
+firebase-adminsdk*.json
+application_default_credentials.json
+credentials.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+.npmrc
+.pypirc
+.netrc
+.git-credentials
+.aws/
+.config/gcloud/
+
+# Firebase local state and exported account / location data.
+.firebase/
+.runtimeconfig.json
+firebase-export-*/
+firebase-exports/
+firestore-export/
+auth_export.json
+auth-export.json
+*-export-metadata
+*.overall_export_metadata
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.sql
+dumps/
+backups/
+
+# Local tooling, browser sessions, and test artifacts.
+.codex/
+.claude/
+.history/
+.idea/
+.vscode/*.local.json
+.vscode/settings.json
+playwright/.auth/
+storageState*.json
+storage-state*.json
+test-results/
+playwright-report/
+coverage/
+tmp/
+temp/
+*.bak
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+

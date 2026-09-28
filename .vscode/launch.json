@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Runday: Edge에서 실행",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:5174/",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "Runday: 개발 서버"
+    }
+  ]
+}
