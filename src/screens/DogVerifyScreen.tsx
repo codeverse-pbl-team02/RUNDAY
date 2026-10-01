@@ -1,3 +1,4 @@
+import { brandLogo } from '../lib/assets';
 import type { Screen } from '../App';
 
 interface Props {
@@ -13,7 +14,7 @@ export default function DogVerifyScreen({ onNavigate }: Props) {
           <img alt="" className="size-full" src="/assets/c4f3a.svg" />
         </button>
         <div className="flex-1 flex justify-center">
-          <img alt="" className="h-9 object-contain" src="/assets/9065b.png" />
+          <img alt="" className="h-9 object-contain" src={brandLogo} />
         </div>
         <button className="size-[22px] overflow-clip relative shrink-0">
           <img alt="" className="absolute inset-0 size-full" src="/assets/08bbd.svg" />

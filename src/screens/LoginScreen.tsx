@@ -1,9 +1,10 @@
+import { brandLogo } from '../lib/assets';
 import { useState, type FormEvent } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { authError } from '../auth/errors';
 import { firebaseConfigured } from '../lib/firebase';
 
-const logo = '/assets/9065b.png';
+const logo = brandLogo;
 const eyeIcon = '/assets/18cb3.svg';
 const inputClass = 'w-full h-[44px] bg-[#fafafa] border border-[#e5e5e5] rounded-[12px] px-4 text-[14px] outline-none focus:border-[#0570db] transition-colors text-[#222]';
 

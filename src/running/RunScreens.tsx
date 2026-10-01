@@ -1,37 +1,46 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { collection, limit, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { getFirebase } from '../lib/firebase';
 import { useAuth } from '../auth/AuthProvider';
 import { authError } from '../auth/errors';
-import { clockText, paceText, useRun, type Point } from './RunProvider';
+import { clockText, distanceMeters, paceText, useRun, type Point } from './RunProvider';
+import { KakaoMap } from '../components/KakaoMap';
+import { kakaoMapConfigured, reverseGeocode } from '../lib/kakaoMap';
 
 const primary = 'w-full rounded-3xl bg-[#0570db] text-white font-bold py-3 text-[14px] disabled:opacity-50';
 export function RoutePreview({ points }: { points: Point[] }) {
-  if (points.length < 2) return <div className="h-[150px] rounded-2xl bg-[#f5f8fc] grid place-items-center text-[12px] text-[#7b8796]">이동하면 경로가 표시됩니다.</div>;
-  const lat0 = points[0].latitude * Math.PI / 180;
-  const xy = points.map(p => ({ x: (p.longitude - points[0].longitude) * Math.cos(lat0), y: -(p.latitude - points[0].latitude), segment: p.segment }));
-  const xs = xy.map(p => p.x), ys = xy.map(p => p.y);
-  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
-  const scale = Math.min(264 / Math.max(maxX - minX, 0.00001), 124 / Math.max(maxY - minY, 0.00001));
-  const project = (p: typeof xy[number]) => `${(150 + (p.x - (minX + maxX) / 2) * scale).toFixed(2)},${(80 + (p.y - (minY + maxY) / 2) * scale).toFixed(2)}`;
-  const segments = [...new Set(xy.map(p => p.segment))];
-  return <svg viewBox="0 0 300 160" role="img" aria-label="GPS 이동 경로" className="w-full h-[150px] rounded-2xl bg-[#f5f8fc]">
-    {segments.map(segment => <polyline key={segment} points={xy.filter(p => p.segment === segment).map(project).join(' ')} fill="none" stroke="#0570db" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />)}
-    <circle cx={project(xy[0]).split(',')[0]} cy={project(xy[0]).split(',')[1]} r="4" fill="#4cb57d" />
-    <circle cx={project(xy[xy.length - 1]).split(',')[0]} cy={project(xy[xy.length - 1]).split(',')[1]} r="4" fill="#ef4444" />
-  </svg>;
+  return <KakaoMap points={points} />;
 }
 export function LocationCard() {
   const run = useRun();
+  const [address, setAddress] = useState('');
+  const [addressStatus, setAddressStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const lastLookup = useRef<{ point: Point; time: number } | null>(null);
+  const lookupVersion = useRef(0);
+  useEffect(() => () => { lookupVersion.current++; }, []);
+  useEffect(() => {
+    if (!run.current || !kakaoMapConfigured) return;
+    const previous = lastLookup.current;
+    if (addressStatus !== 'error' && previous && Date.now() - previous.time < 30_000 && distanceMeters(previous.point, run.current) < 50) return;
+    lastLookup.current = { point: run.current, time: Date.now() };
+    const version = ++lookupVersion.current;
+    setAddressStatus('loading');
+    reverseGeocode(run.current.latitude, run.current.longitude).then(result => {
+      if (version !== lookupVersion.current) return;
+      setAddress(result || '주소를 찾을 수 없습니다.');
+      setAddressStatus('ready');
+    }).catch(() => { if (version === lookupVersion.current) setAddressStatus('error'); });
+  }, [run.current]);
   return <div className="mx-4 mb-3 bg-white border border-[#dce3f1] rounded-3xl p-4">
     <div className="flex items-center justify-between gap-2">
       <p className="font-bold text-[14px]">📍 현재 위치</p>
       <button type="button" disabled={run.locating} onClick={run.locate} className="text-[12px] text-[#0570db] py-2 px-2 disabled:opacity-50">{run.locating ? '확인 중…' : '위치 확인'}</button>
     </div>
     {run.current ? <>
-      <p className="text-[12px] text-[#4a6080]">위도 {run.current.latitude.toFixed(5)} · 경도 {run.current.longitude.toFixed(5)}</p>
+      <p role="status" className="text-[12px] text-[#4a6080]">{addressStatus === 'ready' ? address : addressStatus === 'error' ? '주소를 불러오지 못했습니다.' : kakaoMapConfigured ? '주소 확인 중…' : '지도 키를 설정하면 주소가 표시됩니다.'}</p>
       <p className="text-[11px] text-[#7b8796] mt-1">오차 약 {Math.round(run.accuracy || 0)}m · {new Date(run.current.timestamp).toLocaleTimeString('ko-KR')} 확인</p>
     </> : <p className="text-[12px] text-[#7b8796]">버튼을 눌러 위치 권한을 허용해 주세요.</p>}
+    <KakaoMap current={run.current} accuracy={run.accuracy} live />
     {run.message && <p role="status" className="text-[12px] text-[#7b8796] mt-2">{run.message}</p>}
   </div>;
 }
@@ -55,8 +64,7 @@ export function RunningScreen({ onBack, onRecords }: { onBack: () => void; onRec
       </div>
       <div className="bg-white rounded-3xl p-4 border border-[#dce3f1]">
         <p className="text-[13px] font-bold mb-2">이동 경로</p>
-        <RoutePreview points={run.session.points} />
-        <p className="text-[10px] text-[#7b8796] mt-2">실제 지도 배경 없이 GPS 이동 모양을 표시합니다.</p>
+        <KakaoMap points={run.session.points} current={run.mode === 'finished' ? null : run.current} accuracy={run.mode === 'finished' ? null : run.accuracy} live={run.mode !== 'finished'} />
         {run.accuracy !== null && <p className="text-[11px] text-[#7b8796]">위치 오차 약 {Math.round(run.accuracy)}m · 거리와 페이스는 추정값입니다.</p>}
       </div>
       <p className="text-[12px] text-[#4a6080]">러닝 중 화면을 켜 두세요. 다른 앱으로 이동하면 자동 일시정지됩니다. 종료 후 저장하면 이동 경로가 내 계정에 보관됩니다.</p>

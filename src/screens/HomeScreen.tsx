@@ -1,3 +1,4 @@
+import { brandLogo } from '../lib/assets';
 import { useState } from 'react';
 import { LocationCard } from '../running/RunScreens';
 import { useAuth } from '../auth/AuthProvider';
@@ -11,7 +12,7 @@ interface Props {
   onNavigate: (screen: Screen) => void;
 }
 
-const logo = '/assets/9065b.png';
+const logo = brandLogo;
 const graphImg = '/assets/0636c.svg';
 const arrowImg = '/assets/3d2d4.svg';
 const courseImg = '/assets/c2574.png';

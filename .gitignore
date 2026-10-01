@@ -3,6 +3,9 @@ dist/
 build/
 .cache/
 .env*
+!.env.example
+# Local app keys and credentials must stay on this machine.
+.env.local
 .vite/
 vite.config.*.timestamp-*
 *.tsbuildinfo
@@ -21,7 +24,6 @@ logs/
 /.opencode-skills/
 
 # Keep the Firebase configuration template tracked.
-!.env.example
 functions/lib/
 
 # Local secrets and credentials (never commit real values in example files).

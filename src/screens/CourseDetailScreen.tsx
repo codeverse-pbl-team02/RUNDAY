@@ -1,3 +1,4 @@
+import { brandLogo } from '../lib/assets';
 import BottomNav, { type TabId } from '../components/BottomNav';
 
 import type { Screen } from '../App';
@@ -7,7 +8,7 @@ interface Props {
   courseId?: number;
 }
 
-const logo = '/assets/9065b.png';
+const logo = brandLogo;
 const mapImg = '/assets/dd208.svg';
 
 interface CourseDetail {

@@ -1,3 +1,4 @@
+import { brandLogo } from '../lib/assets';
 import { useState } from 'react';
 import BottomNav from '../components/BottomNav';
 import type { Screen } from '../App';
@@ -16,7 +17,7 @@ function SharedHeader({ onBack }: { onBack: () => void }) {
           <img src="/assets/c4f3a.svg" alt="back" className="size-full" />
         </button>
         <div className="flex-1 flex justify-center">
-          <img alt="" className="h-9 object-contain" src="/assets/9065b.png" />
+          <img alt="" className="h-9 object-contain" src={brandLogo} />
         </div>
         <button className="size-[22px] overflow-clip relative shrink-0">
           <img alt="" className="absolute inset-0 size-full" src="/assets/08bbd.svg" />

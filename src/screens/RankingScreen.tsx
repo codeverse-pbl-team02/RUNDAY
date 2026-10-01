@@ -1,3 +1,4 @@
+import { brandLogo } from '../lib/assets';
 import type { Screen } from '../App';
 
 interface Props {
@@ -24,7 +25,7 @@ export default function RankingScreen({ onNavigate }: Props) {
     <div className="flex flex-col h-full bg-[#edf4fb]">
       {/* Header */}
       <div className="bg-[#edf4fb] flex h-[56px] items-center px-3 shrink-0 w-full">
-        <img src="/assets/9065b.png" alt="뛴데이" className="h-[48px] w-[112px] object-contain" />
+        <img src={brandLogo} alt="뛴데이" className="h-[48px] w-[112px] object-contain" />
         <div className="flex-1" />
         <button className="size-[20px] overflow-clip relative shrink-0">
           <img src="/assets/1c57a.svg" alt="" className="absolute inset-0 size-full" />

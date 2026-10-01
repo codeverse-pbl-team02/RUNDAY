@@ -1,3 +1,4 @@
+import { brandLogo } from '../lib/assets';
 import { useState } from 'react';
 import BottomNav, { type TabId } from '../components/BottomNav';
 
@@ -8,7 +9,7 @@ interface Props {
   onSelectCourse?: (id: number) => void;
 }
 
-const logo = '/assets/9065b.png';
+const logo = brandLogo;
 const mapImg = '/assets/dd208.svg';
 const bookmarkIcon = '/assets/abf88.svg';
 
