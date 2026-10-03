@@ -1,12 +1,21 @@
 import { brandLogo } from '../lib/assets';
 import BottomNav from '../components/BottomNav';
+import { useAuth } from '../auth/AuthProvider';
+import { useActivity } from '../running/ActivityProvider';
 import type { Screen } from '../App';
 
 interface Props {
   onNavigate: (screen: Screen) => void;
+  onPloggingVerify: (challengeTitle: string) => void;
 }
 
-export default function ESGScreen({ onNavigate }: Props) {
+export default function ESGScreen({ onNavigate, onPloggingVerify }: Props) {
+  const { profile } = useAuth();
+  const { runs, totalDistanceMeters } = useActivity();
+  const freshAccount = profile?.dataVersion === 2;
+  const today = new Date();
+  const todayDistance = runs.filter(run => new Date(run.startedAt).toDateString() === today.toDateString())
+    .reduce((sum, run) => sum + run.distanceMeters, 0);
   return (
     <div className="flex flex-col h-full relative bg-[#edf4fb]">
       {/* Header */}
@@ -38,23 +47,23 @@ export default function ESGScreen({ onNavigate }: Props) {
             <p className="font-black text-[12px] text-[#4cb57d] mb-3">🌍 지구 지킴이 리포트</p>
             <div className="mb-3">
               <p className="font-bold text-[18px] text-black leading-[28px]">
-                오늘 <span className="text-[#3b91c1]">4.2km</span>를 걸어
+                {freshAccount ? '오늘 러닝 ' : '오늘 '}<span className="text-[#3b91c1]">{freshAccount ? `${(todayDistance / 1000).toFixed(1)}km` : '4.2km'}</span>{freshAccount ? '' : '를 걸어'}
               </p>
               <p className="font-bold text-[18px] text-black leading-[28px]">
-                자동차 대비 <span className="text-[#4cb57d]">0.9kg CO₂</span> 절감
+                {freshAccount ? '인증한 탄소 절감 ' : '자동차 대비 '}<span className="text-[#4cb57d]">{freshAccount ? '0kg CO₂' : '0.9kg CO₂'}</span>{freshAccount ? '' : ' 절감'}
               </p>
             </div>
             <div className="flex gap-4">
               <div className="text-center">
-                <p className="font-bold text-[14px] text-[#3b91c1] leading-[20px]">18.4kg</p>
+                <p className="font-bold text-[14px] text-[#3b91c1] leading-[20px]">{freshAccount ? '0kg' : '18.4kg'}</p>
                 <p className="font-medium text-[12px] text-[#7b8796]">이번달 절감</p>
               </div>
               <div className="text-center">
-                <p className="font-bold text-[14px] text-[#4cb57d] leading-[20px]">🌳 2그루</p>
+                <p className="font-bold text-[14px] text-[#4cb57d] leading-[20px]">🌳 {freshAccount ? '0그루' : '2그루'}</p>
                 <p className="font-medium text-[12px] text-[#7b8796]">나무 효과</p>
               </div>
               <div className="text-center">
-                <p className="font-bold text-[14px] text-[#60aedd] leading-[20px]">247km</p>
+                <p className="font-bold text-[14px] text-[#60aedd] leading-[20px]">{freshAccount ? `${(totalDistanceMeters / 1000).toFixed(1)}km` : '247km'}</p>
                 <p className="font-medium text-[12px] text-[#7b8796]">누적 거리</p>
               </div>
             </div>
@@ -89,7 +98,7 @@ export default function ESGScreen({ onNavigate }: Props) {
               </div>
             </div>
             <button
-              onClick={() => onNavigate('plogging-verify')}
+              onClick={() => onPloggingVerify('광안리 해안 플로깅')}
               className="h-[38px] px-4 rounded-[18px] bg-[rgba(25,170,3,0.19)]"
             >
               <p className="font-bold text-[12px] text-[#168604]">인증하기</p>
@@ -107,7 +116,7 @@ export default function ESGScreen({ onNavigate }: Props) {
               </div>
             </div>
             <button
-              onClick={() => onNavigate('plogging-verify')}
+              onClick={() => onPloggingVerify('해운대 비치 클린')}
               className="h-[38px] px-4 rounded-[18px] bg-[rgba(25,170,3,0.19)]"
             >
               <p className="font-bold text-[12px] text-[#168604]">인증하기</p>
@@ -145,7 +154,7 @@ export default function ESGScreen({ onNavigate }: Props) {
 
         {/* CHALLENGE - 반려견 산책 card */}
         <div className="mx-4 mb-4 bg-white border border-[#dce3f1] rounded-[24px] overflow-hidden">
-          <div className="px-4 pt-4 pb-4 flex items-start gap-3">
+          <div className="px-4 pt-4 flex items-start gap-3">
             <div className="w-10 h-10 bg-[rgba(128,89,255,0.1)] rounded-[16px] flex items-center justify-center shrink-0">
               <span className="text-[20px]">🐕</span>
             </div>
@@ -154,15 +163,17 @@ export default function ESGScreen({ onNavigate }: Props) {
                 <p className="font-bold text-[12px] text-[#8059ff]">CHALLENGE</p>
               </div>
               <p className="font-bold text-[14px] text-black mb-1">반려견 산책 챌린지</p>
-              <p className="font-normal text-[12px] text-[#7b8796] leading-[16px] mb-3">사랑하는 반려견과 발맞춰 걷는 꼬리 흔들 완주 미션!</p>
-              <button
-                onClick={() => onNavigate('dog-verify')}
-                className="w-full h-[41px] rounded-[18px] flex items-center justify-center"
-                style={{ backgroundColor: 'rgba(128,89,255,0.5)', boxShadow: '0px 2px 4px rgba(0,0,0,0.1), 0px 4px 6px rgba(0,0,0,0.1)' }}
-              >
-                <p className="font-bold text-[14px] text-white">인증하고 배지 받기</p>
-              </button>
+              <p className="font-normal text-[12px] text-[#7b8796] leading-[16px]">사랑하는 반려견과 발맞춰 걷는 꼬리 흔들 완주 미션!</p>
             </div>
+          </div>
+          <div className="px-4 pt-3 pb-4">
+            <button
+              onClick={() => onNavigate('dog-verify')}
+              className="w-full h-[41px] rounded-[18px] flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(128,89,255,0.5)', boxShadow: '0px 2px 4px rgba(0,0,0,0.1), 0px 4px 6px rgba(0,0,0,0.1)' }}
+            >
+              <p className="font-bold text-[14px] text-white">인증하고 배지 받기</p>
+            </button>
           </div>
         </div>
 

@@ -2,10 +2,12 @@ import { brandLogo } from '../lib/assets';
 import BottomNav, { type TabId } from '../components/BottomNav';
 
 import type { Screen } from '../App';
+import { gwanganDogGuide, gwanganSeagullGuide, haeundaeSnailGuide, seomyeonYachtGuide } from '../running/courseGuide';
 
 interface Props {
   onNavigate: (screen: Screen) => void;
   courseId?: number;
+  onStartCourse: (courseId: number) => void;
 }
 
 const logo = brandLogo;
@@ -29,107 +31,107 @@ interface CourseDetail {
 
 const courseDetails: Record<number, CourseDetail> = {
   1: {
-    title: '광안리 바다 갈매기런',
+    title: '광안리 댕댕 RUN',
     district: '수영구',
-    distance: '5.2km',
-    duration: '38분',
-    calories: '312kcal',
-    emoji: '🌊',
+    distance: '4.04km',
+    duration: '약 26분',
+    calories: '약 270kcal',
+    emoji: '🐕',
     buttonColor: '#0570db',
-    routeLabel1: '광안리 해안선 5.2km',
+    routeLabel1: '광안리 댕댕 RUN 4.04km',
     routeColor1: '#60aedd',
-    routeLabel2: '민락 루프 3.1km',
+    routeLabel2: '출발·도착 민락수변공원',
     routeColor2: '#6acf98',
     landmark: {
       icon: '📍',
-      title: '랜드마크 3곳 포함',
-      spots: '광안대교 뷰포인트, 수영만 요트경기장, 민락수변공원',
-      note: '인증 지점이 자동 표시됩니다.',
+      title: '주요 경유지',
+      spots: '민락수변공원 공영주차장 → 런더너호텔 → 민락동행정복지센터 → 민락회타운 → e편한세상광안비치 → 출발점',
+      note: '제공된 GPX 경로를 지도 안내에 사용합니다.',
     },
     facility: {
       icon: '🏪',
       title: '주변 공공시설물 정보',
-      desc: '화장실 4곳, 음수대 2곳, 운동기구 구역 1곳을 제공합니다.',
+      desc: '현장 시설과 보행 가능한 길을 확인하며 달려주세요.',
     },
   },
   2: {
-    title: '해운대 해변 돌고래런',
-    district: '해운대구',
-    distance: '4.5km',
-    duration: '30분',
-    calories: '270kcal',
-    emoji: '🌅',
+    title: '광안리 갈매기 RUN',
+    district: '수영구',
+    distance: '4.13km',
+    duration: '약 32분',
+    calories: '약 260kcal',
+    emoji: '🐦',
     buttonColor: '#00c0e8',
-    routeLabel1: '해운대 비치 4.5km',
+    routeLabel1: '광안리 갈매기 RUN 4.13km',
     routeColor1: '#00c0e8',
-    routeLabel2: '동백 루프 2.8km',
+    routeLabel2: '수영로 576 순환',
     routeColor2: '#f5a623',
     landmark: {
       icon: '📍',
-      title: '랜드마크 3곳 포함',
-      spots: '해운대 해수욕장, 동백섬 누리마루, APEC나루공원',
-      note: '일출 시간대 뷰포인트가 자동 표시됩니다.',
+      title: '광안리 해안 순환 코스',
+      spots: '수영로 576에서 출발해 광안리 해안과 주변 도로를 거쳐 출발점으로 돌아옵니다.',
+      note: '제공된 GPX 경로를 지도 안내에 사용합니다.',
     },
     facility: {
       icon: '🏪',
-      title: '주변 공공시설물 정보',
-      desc: '화장실 6곳, 샤워시설 1곳, 편의점 연계 지점을 제공합니다.',
+      title: '현장 시설 안내',
+      desc: '통행 가능한 길과 주변 시설은 현장에서 확인해 주세요.',
     },
   },
   3: {
-    title: '낙동강 생태공원 오리런',
-    district: '강서구',
-    distance: '7.8km',
-    duration: '55분',
-    calories: '468kcal',
-    emoji: '🌿',
-    buttonColor: '#4caf7d',
-    routeLabel1: '강서구청 루프 4.6km',
+    title: '해운대 달팽이 RUN',
+    district: '해운대구',
+    distance: '11.4km',
+    duration: '약 3시간 11분',
+    calories: '약 623kcal',
+    emoji: '🐌',
+    buttonColor: '#0570db',
+    routeLabel1: '해운대 달팽이 RUN 11.4km',
     routeColor1: '#60aedd',
-    routeLabel2: '대저 생태런 6.8km',
+    routeLabel2: '중동 1783-2 → 좌동 995',
     routeColor2: '#6acf98',
     landmark: {
       icon: '📍',
-      title: '생태 랜드마크 3곳 포함',
-      spots: '낙동강 하구 철새도래지, 명지시장, 신호생태공원',
-      note: '인증 지점이 자동 표시됩니다.',
+      title: '해운대 업다운힐 코스',
+      spots: '해운대구 중동 1783-2에서 출발해 해운대와 좌동 일대를 거쳐 좌동 995에 도착합니다.',
+      note: '체력 소모가 큰 중급자 코스입니다. 제공된 GPX 경로를 지도 안내에 사용합니다.',
     },
     facility: {
-      icon: '🏪',
-      title: '주변 공공시설물 정보',
-      desc: '운동기구 및 화장실 정보를 제공해 드립니다.',
+      icon: '⛰️',
+      title: '고도 변화 안내',
+      desc: 'GPX 기준 총 상승 144m·총 하강 122m입니다. 오르막과 내리막에서 페이스를 조절해 주세요.',
     },
   },
   4: {
-    title: '서면 생활권 하트런',
+    title: '서면 요트 RUN',
     district: '부산진구',
-    distance: '3.6km',
-    duration: '24분',
-    calories: '216kcal',
-    emoji: '🏙️',
+    distance: '5.98km',
+    duration: '약 40분',
+    calories: '약 327kcal',
+    emoji: '⛵',
     buttonColor: '#7b5ea7',
-    routeLabel1: '서면 하트 루프 3.6km',
+    routeLabel1: '서면 요트 RUN 5.98km',
     routeColor1: '#7b5ea7',
-    routeLabel2: '전포 연결 2.2km',
+    routeLabel2: '전포동 888 출발·도착',
     routeColor2: '#f5a623',
     landmark: {
       icon: '📍',
-      title: '생활권 랜드마크 3곳',
-      spots: '서면 롯데백화점, 전포 카페거리, 부전시장',
-      note: '야간 조명 구간이 자동 표시됩니다.',
+      title: '서면 순환 코스',
+      spots: '전포동 888에서 출발해 서면역과 부전역 인근을 거쳐 출발점으로 돌아옵니다.',
+      note: '제공된 GPX 경로를 지도 안내에 사용합니다.',
     },
     facility: {
       icon: '🏪',
-      title: '주변 편의시설 정보',
-      desc: '카페·편의점 연계 지점, 화장실 3곳 정보를 제공합니다.',
+      title: '현장 시설 안내',
+      desc: '통행 가능한 길과 주변 시설은 현장에서 확인해 주세요.',
     },
   },
   5: {
     title: '을숙도 반려견 산책런',
     district: '사하구',
     distance: '4.2km',
-    duration: '35분',
-    calories: '252kcal',
+    duration: '약 35분',
+    calories: '약 252kcal',
     emoji: '🐾',
     buttonColor: '#e07b39',
     routeLabel1: '을숙도 루프 4.2km',
@@ -150,7 +152,7 @@ const courseDetails: Record<number, CourseDetail> = {
   },
 };
 
-export default function CourseDetailScreen({ onNavigate, courseId = 1 }: Props) {
+export default function CourseDetailScreen({ onNavigate, courseId = 1, onStartCourse }: Props) {
   const course = courseDetails[courseId] ?? courseDetails[1];
 
   const handleTabChange = (tab: TabId) => {
@@ -180,7 +182,7 @@ export default function CourseDetailScreen({ onNavigate, courseId = 1 }: Props) 
       <div className="flex-1 overflow-y-auto pb-[68px]">
         {/* Headings */}
         <div className="px-4 mb-2">
-          <p className="text-[12px] text-[#7b8796]" style={{ fontFamily: 'Noto Sans KR', fontWeight: 400 }}>AI 추천 코스</p>
+          <p className="text-[12px] text-[#7b8796]" style={{ fontFamily: 'Noto Sans KR', fontWeight: 400 }}>{courseId === 2 || courseId === 3 || courseId === 4 ? 'GPS 안내 코스' : 'AI 추천 코스'}</p>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-[18px] leading-none">{course.emoji}</span>
             <p className="text-[18px] text-black" style={{ fontFamily: 'Noto Sans KR', fontWeight: 700 }}>{course.title}</p>
@@ -191,15 +193,15 @@ export default function CourseDetailScreen({ onNavigate, courseId = 1 }: Props) 
         </div>
 
         {/* Map */}
-        <div className="mx-4 mb-3 rounded-[18px] overflow-hidden bg-[#dde8f2] relative h-[170px] flex-shrink-0">
-          <img src={mapImg} alt="map" className="absolute inset-0 w-full h-full object-cover" />
-          <div
+        <div className={`mx-4 mb-3 rounded-[18px] overflow-hidden bg-[#dde8f2] relative ${courseId === 2 ? 'h-[400px]' : 'h-[170px]'} flex-shrink-0`}>
+          <img src={courseId === 1 ? gwanganDogGuide.referenceImage : courseId === 2 ? gwanganSeagullGuide.referenceImage : courseId === 3 ? haeundaeSnailGuide.referenceImage : courseId === 4 ? seomyeonYachtGuide.referenceImage : mapImg} alt={courseId === 1 ? '광안리 댕댕 RUN 참고 경로' : courseId === 2 ? '광안리 갈매기 RUN 대표 경로 이미지' : courseId === 3 ? '해운대 달팽이 RUN 대표 경로 이미지' : courseId === 4 ? '서면 요트 RUN 대표 경로 이미지' : '코스 참고 지도'} className="absolute inset-0 w-full h-full object-cover object-center" />
+          {courseId === 5 && <div
             className="absolute bg-white border-[1.5px] border-black rounded-full px-2.5 py-0.5 drop-shadow-sm"
             style={{ right: '10%', top: '50%' }}
           >
             <span className="text-[12px] text-black" style={{ fontFamily: 'Noto Sans KR', fontWeight: 900 }}>ME</span>
-          </div>
-          <div className="absolute bottom-2.5 left-2.5 flex gap-1.5 flex-wrap">
+          </div>}
+          {courseId === 5 && <div className="absolute bottom-2.5 left-2.5 flex gap-1.5 flex-wrap">
             <div className="backdrop-blur-sm bg-white/80 border border-black/10 rounded-full px-2.5 py-1 flex items-center gap-1">
               <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: course.routeColor1 }} />
               <span className="text-[9px]" style={{ fontFamily: 'Noto Sans KR', fontWeight: 900, color: course.routeColor1 }}>{course.routeLabel1}</span>
@@ -208,8 +210,12 @@ export default function CourseDetailScreen({ onNavigate, courseId = 1 }: Props) 
               <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: course.routeColor2 }} />
               <span className="text-[9px]" style={{ fontFamily: 'Noto Sans KR', fontWeight: 900, color: course.routeColor2 }}>{course.routeLabel2}</span>
             </div>
-          </div>
+          </div>}
         </div>
+        {courseId === 1 && <p className="px-4 mb-3 text-[11px] text-[#7b8796]">대표 이미지는 코스 미리보기입니다. 러닝 화면에서는 GPX 코스를 회색으로, 따라 달린 구간을 파란색으로 표시합니다.</p>}
+        {courseId === 2 && <p className="px-4 mb-3 text-[11px] text-[#7b8796]">러닝 화면에서 GPX 코스는 회색, 따라 달린 구간은 파란색으로 표시됩니다. 대표 이미지는 코스 미리보기입니다.</p>}
+        {courseId === 3 && <p className="px-4 mb-3 text-[11px] text-[#7b8796]">대표 이미지는 코스 미리보기입니다. 러닝 화면에서는 GPX 코스를 회색으로, 따라 달린 구간을 파란색으로 표시합니다.</p>}
+        {courseId === 4 && <p className="px-4 mb-3 text-[11px] text-[#7b8796]">대표 이미지는 코스 미리보기입니다. 러닝 화면에서는 GPX 코스를 회색으로, 따라 달린 구간을 파란색으로 표시합니다.</p>}
 
         {/* Feature cards */}
         <div className="px-4 flex flex-col gap-2.5 mb-3">
@@ -245,7 +251,7 @@ export default function CourseDetailScreen({ onNavigate, courseId = 1 }: Props) 
 
         {/* Start button */}
         <div className="px-4 mb-3">
-          <button onClick={() => onNavigate('running')}
+          <button onClick={() => onStartCourse(courseId)}
 
             className="w-full h-12 rounded-2xl text-white text-[15px] transition-opacity active:opacity-80"
             style={{

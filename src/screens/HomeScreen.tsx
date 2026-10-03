@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { LocationCard } from '../running/RunScreens';
 import { useAuth } from '../auth/AuthProvider';
 import { authError } from '../auth/errors';
+import { useActivity } from '../running/ActivityProvider';
+import { WeeklyRunChart } from '../running/WeeklyRunChart';
 import BottomNav, { type TabId } from '../components/BottomNav';
 
 import type { Screen } from '../App';
@@ -10,15 +12,25 @@ import CollapsibleMenuSection from '../components/CollapsibleMenuSection';
 
 interface Props {
   onNavigate: (screen: Screen) => void;
+  onStartFreeRun: () => void;
 }
 
 const logo = brandLogo;
-const graphImg = '/assets/0636c.svg';
+const exampleWeeklyKm = [
+  { day: '월', km: 2.9 },
+  { day: '화', km: 5.1 },
+  { day: '수', km: 4.4 },
+  { day: '목', km: 4.2 },
+  { day: '금', km: 3.9 },
+  { day: '토', km: 5.2 },
+  { day: '일', km: 5.6 },
+];
 const arrowImg = '/assets/3d2d4.svg';
-const courseImg = '/assets/c2574.png';
-const product1 = '/assets/ff01f.png';
-const product2 = '/assets/9909d.png';
-const product3 = '/assets/56120.png';
+const coupangEmbeds = [
+  'https://coupa.ng/cpRXol',
+  'https://coupa.ng/cpRXp9',
+  'https://coupa.ng/cpRXsc',
+];
 
 const menuSections = [
   {
@@ -54,8 +66,10 @@ const menuSections = [
   },
 ];
 
-export default function HomeScreen({ onNavigate }: Props) {
+export default function HomeScreen({ onNavigate, onStartFreeRun }: Props) {
   const { user, profile, logout } = useAuth();
+  const { runs, totalDistanceMeters, badgeCount, loading: activityLoading, error: activityError } = useActivity();
+  const freshAccount = profile?.dataVersion === 2;
   const [logoutError, setLogoutError] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -124,11 +138,15 @@ export default function HomeScreen({ onNavigate }: Props) {
                 </button>
               </div>
               <div className="flex gap-2">
-                {[
+                {(freshAccount ? [
+                  { val: `${(totalDistanceMeters / 1000).toFixed(1)}km`, label: '누적 거리' },
+                  { val: `${runs.length}회`, label: '러닝 횟수' },
+                  { val: `${badgeCount}개`, label: '배지' },
+                ] : [
                   { val: '124.6km', label: '누적 거리' },
                   { val: '38회', label: '러닝 횟수' },
                   { val: '10개', label: '배지' },
-                ].map((s) => (
+                ]).map((s) => (
                   <div key={s.label} className="flex-1 bg-white/15 rounded-[10px] py-1.5 flex flex-col items-center">
                     <p className="font-bold text-[12px] text-white">{s.val}</p>
                     <p className="text-[9px] text-white/70">{s.label}</p>
@@ -222,7 +240,7 @@ export default function HomeScreen({ onNavigate }: Props) {
             <div className="bg-gradient-to-r from-[#fff4d6] via-[#fff9e6] to-[#fffdf5] border border-[#dce3f1] rounded-3xl p-3 flex-1 shadow-sm">
               <p className="text-[9px] text-[#7b8796] mb-1" style={{ fontFamily: 'Noto Sans KR', fontWeight: 700 }}>오늘의 러닝</p>
               <p className="text-[11px] text-black leading-tight" style={{ fontFamily: 'Noto Sans KR', fontWeight: 700 }}>
-                광안리 바다<br />갈매기런
+                광안리 댕댕<br />RUN
               </p>
               <button
                 onClick={() => onNavigate('course-detail')}
@@ -262,7 +280,7 @@ export default function HomeScreen({ onNavigate }: Props) {
         {/* Free running button */}
         <div className="px-4 mb-4">
           <button
-            onClick={() => onNavigate('running')}
+            onClick={onStartFreeRun}
             className="w-full h-[47px] bg-[#0570db] rounded-3xl text-white text-[14px] font-bold"
             style={{ fontFamily: 'Noto Sans KR', fontWeight: 700 }}
           >
@@ -272,21 +290,24 @@ export default function HomeScreen({ onNavigate }: Props) {
 
         {/* Weekly running chart */}
         <div className="px-4 mb-3">
-          <p className="text-[14px] text-black mb-0.5" style={{ fontFamily: 'Noto Sans KR', fontWeight: 700 }}>이번 주 러닝 기록 (예시)</p>
+          <p className="text-[14px] text-black mb-0.5" style={{ fontFamily: 'Noto Sans KR', fontWeight: 700 }}>이번 주 러닝 기록</p>
           <p className="text-[12px] text-[#7b8796] mb-2" style={{ fontFamily: 'Noto Sans KR', fontWeight: 400 }}>탄소 절감량과 함께보는 7일 러닝 기록!</p>
-
-          <div className="bg-white border border-[#dce3f1] rounded-3xl p-4">
+          {freshAccount ? activityLoading ? <p className="bg-white rounded-3xl p-4 text-[12px] text-[#7b8796]">기록을 불러오는 중…</p> : activityError ? <p role="alert" className="bg-white rounded-3xl p-4 text-[12px] text-red-600">{activityError}</p> : <WeeklyRunChart runs={runs} /> : <div className="bg-white border border-[#dce3f1] rounded-3xl p-4">
             <div className="flex justify-end mb-2">
               <span className="text-[10px] text-[#0570db]" style={{ fontFamily: 'Noto Sans KR', fontWeight: 500 }}>총 31.3km</span>
             </div>
             {/* Chart */}
-            <div className="relative h-9 mb-2">
-              <img src={graphImg} alt="weekly chart" className="w-full h-full object-fill" />
+            <div className="grid grid-cols-7 gap-2 items-end h-14 mb-2" role="list" aria-label="요일별 예시 러닝 거리 막대그래프">
+              {exampleWeeklyKm.map(({ day, km }) => (
+                <div key={day} role="listitem" aria-label={`${day}요일 ${km}킬로미터`} className="h-full flex items-end justify-center">
+                  <div className="w-full max-w-[24px] rounded-t-[3px] bg-[#edf4fb] border-t border-[#0570db]" style={{ height: `${km / 5.6 * 100}%` }} />
+                </div>
+              ))}
             </div>
             {/* Day labels */}
-            <div className="flex justify-between text-[10px] text-black border-t border-[#dce3f1] pt-2 mb-3">
-              {['월', '화', '수', '목', '금', '토', '일'].map((d) => (
-                <span key={d} style={{ fontFamily: 'Noto Sans KR', fontWeight: 400 }}>{d}</span>
+            <div className="grid grid-cols-7 gap-2 text-center text-[10px] text-black border-t border-[#dce3f1] pt-2 mb-3">
+              {exampleWeeklyKm.map(({ day }) => (
+                <span key={day} style={{ fontFamily: 'Noto Sans KR', fontWeight: 400 }}>{day}</span>
               ))}
             </div>
             {/* Carbon savings */}
@@ -301,7 +322,7 @@ export default function HomeScreen({ onNavigate }: Props) {
                 </p>
               </div>
             </div>
-          </div>
+          </div>}
         </div>
 
         {/* Quick actions */}
@@ -337,16 +358,20 @@ export default function HomeScreen({ onNavigate }: Props) {
           <p className="text-[12px] text-[#7b8796] mb-2" style={{ fontFamily: 'Noto Sans KR', fontWeight: 400 }}>
             이 활동은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.
           </p>
-          <div className="flex gap-2">
-            <div className="flex-1 h-[63px] rounded-3xl overflow-hidden">
-              <img src={product1} alt="" className="w-full h-full object-cover" />
-            </div>
-            <div className="flex-1 h-[63px] rounded-3xl overflow-hidden">
-              <img src={product2} alt="" className="w-full h-full object-cover" />
-            </div>
-            <div className="w-10 h-[63px] overflow-hidden">
-              <img src={product3} alt="" className="w-full h-full object-cover" />
-            </div>
+          <div className="flex gap-2 overflow-x-auto pb-2" aria-label="쿠팡 추천 상품">
+            {coupangEmbeds.map((src, index) => (
+              <iframe
+                key={src}
+                src={src}
+                title={`쿠팡 추천 상품 ${index + 1}`}
+                width="120"
+                height="240"
+                frameBorder="0"
+                scrolling="no"
+                referrerPolicy="unsafe-url"
+                className="shrink-0"
+              />
+            ))}
           </div>
         </div>
       </div>

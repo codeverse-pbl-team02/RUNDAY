@@ -1,11 +1,16 @@
+import { useState } from 'react';
 import { brandLogo } from '../lib/assets';
+import PhotoCapturePicker from '../components/PhotoCapturePicker';
 import type { Screen } from '../App';
 
 interface Props {
   onNavigate: (screen: Screen) => void;
+  onComplete: (photo: File) => void;
 }
 
-export default function DogVerifyScreen({ onNavigate }: Props) {
+export default function DogVerifyScreen({ onNavigate, onComplete }: Props) {
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [error, setError] = useState('');
   return (
     <div className="flex flex-col h-full relative bg-[#edf4fb]">
       {/* Header */}
@@ -30,14 +35,7 @@ export default function DogVerifyScreen({ onNavigate }: Props) {
       <div className="flex-1 overflow-y-auto pb-4 px-4">
         <p className="font-bold text-[12px] text-black mb-3 mt-2">인증 사진 등록</p>
 
-        {/* Photo upload box */}
-        <div className="border-2 border-black border-dashed rounded-[24px] h-[191px] flex flex-col items-center justify-center mb-6">
-          <p className="font-bold text-[12px] text-black text-center">사진 촬영 또는 업로드</p>
-          <p className="font-bold text-[10px] text-[#7b8796] text-center mt-1">러닝을 함께한 반려견 사진을 올려주세요</p>
-          <button className="mt-3 h-[38px] px-8 rounded-[18px]" style={{ backgroundColor: 'rgba(128,89,255,0.19)' }}>
-            <p className="font-bold text-[12px] text-[#8059ff]">선택</p>
-          </button>
-        </div>
+        <PhotoCapturePicker photo={photo} onPhotoChange={file => { setPhoto(file); setError(''); }} description="러닝을 함께한 반려견 사진을 올려주세요" heightClassName="h-[191px]" tone="purple" filenamePrefix="dog-run" />
 
         {/* Badge info card */}
         <div className="bg-white border border-[#dce3f1] rounded-[16px] p-4 flex items-center gap-4 mb-6"
@@ -55,8 +53,9 @@ export default function DogVerifyScreen({ onNavigate }: Props) {
         </div>
 
         {/* Submit button */}
+        {error && <p role="alert" className="text-[12px] text-red-600 mb-3">{error}</p>}
         <button
-          onClick={() => onNavigate('dog-complete')}
+          onClick={() => photo ? onComplete(photo) : setError('반려견 사진을 촬영하거나 앨범에서 선택해 주세요.')}
           className="w-full h-[50px] rounded-[18px] bg-[#0570db] flex items-center justify-center"
           style={{ boxShadow: '0px 2px 4px rgba(0,0,0,0.1), 0px 4px 6px rgba(0,0,0,0.1)' }}
         >

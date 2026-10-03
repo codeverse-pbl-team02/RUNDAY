@@ -1,11 +1,19 @@
+import { useEffect, useState } from 'react';
 import { brandLogo } from '../lib/assets';
 import type { Screen } from '../App';
 
 interface Props {
   onNavigate: (screen: Screen) => void;
+  photo: File;
 }
 
-export default function DogCompleteScreen({ onNavigate }: Props) {
+export default function DogCompleteScreen({ onNavigate, photo }: Props) {
+  const [photoUrl, setPhotoUrl] = useState('');
+  useEffect(() => {
+    const url = URL.createObjectURL(photo);
+    setPhotoUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photo]);
   return (
     <div className="flex flex-col h-full relative bg-[#edf4fb]">
       {/* Header */}
@@ -33,7 +41,7 @@ export default function DogCompleteScreen({ onNavigate }: Props) {
         {/* Dog photo with run stats overlay */}
         <div className="relative rounded-[24px] overflow-hidden mb-4" style={{ height: 280 }}>
           <img
-            src="/assets/f04d6.png"
+            src={photoUrl}
             alt="반려견 인증 사진"
             className="w-full h-full object-cover"
           />

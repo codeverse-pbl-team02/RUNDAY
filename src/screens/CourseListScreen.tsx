@@ -1,6 +1,8 @@
 import { brandLogo } from '../lib/assets';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import BottomNav, { type TabId } from '../components/BottomNav';
+import { KakaoMap } from '../components/KakaoMap';
+import { useRun } from '../running/RunProvider';
 
 type Screen = 'login' | 'home' | 'courses' | 'course-detail';
 
@@ -10,10 +12,9 @@ interface Props {
 }
 
 const logo = brandLogo;
-const mapImg = '/assets/dd208.svg';
 const bookmarkIcon = '/assets/abf88.svg';
 
-const filters = ['전체', '생활권', '관광', '공원', '반려견'];
+const filters = ['전체', '생활권', '관광', '반려견'];
 
 interface Course {
   id: number;
@@ -24,7 +25,7 @@ interface Course {
   difficulty: string;
   difficultyColor: string;
   difficultyBg: string;
-  rating: number;
+  rating: number | null;
   emoji: string;
   title: string;
   district: string;
@@ -38,7 +39,7 @@ interface Course {
 const courses: Course[] = [
   {
     id: 1,
-    image: '/assets/c2574.png',
+    image: '/assets/gwangan-dangdang-route.png',
     category: '관광',
     categoryColor: '#60aedd',
     categoryBg: 'rgba(96,174,221,0.13)',
@@ -46,70 +47,70 @@ const courses: Course[] = [
     difficultyColor: '#f5a623',
     difficultyBg: 'rgba(245,166,35,0.13)',
     rating: 4.9,
-    emoji: '🌊',
-    title: '광안리 바다 갈매기런',
+    emoji: '🐕',
+    title: '광안리 댕댕 RUN',
     district: '수영구',
-    distance: '5.2km',
-    duration: '38분',
-    calories: '312kcal',
-    tags: ['바다뷰', '포토스팟', '완주율 94%'],
+    distance: '4.04km',
+    duration: '약 26분',
+    calories: '약 270kcal',
+    tags: ['반려견', '평지 코스', '광안리'],
     buttonColor: '#0570db',
   },
   {
     id: 2,
-    image: '/assets/467dc.png',
+    image: '/assets/gwangan-seagull-route.png',
     category: '관광',
     categoryColor: '#60aedd',
     categoryBg: 'rgba(96,174,221,0.13)',
     difficulty: '보통',
     difficultyColor: '#f5a623',
     difficultyBg: 'rgba(245,166,35,0.13)',
-    rating: 4.9,
-    emoji: '🌅',
-    title: '해운대 해변 돌고래런',
-    district: '해운대구',
-    distance: '4.5km',
-    duration: '30분',
-    calories: '270kcal',
-    tags: ['새벽 추천', '일출뷰', '포토스팟'],
+    rating: null,
+    emoji: '🐦',
+    title: '광안리 갈매기 RUN',
+    district: '수영구',
+    distance: '4.13km',
+    duration: '약 32분',
+    calories: '약 260kcal',
+    tags: ['광안리', '해안 코스', '평지 코스'],
     buttonColor: '#00c0e8',
   },
   {
     id: 3,
-    image: '/assets/5d935.png',
-    category: '공원',
-    categoryColor: '#4caf7d',
-    categoryBg: 'rgba(76,175,125,0.13)',
-    difficulty: '쉬움',
-    difficultyColor: '#4caf7d',
-    difficultyBg: 'rgba(76,175,125,0.13)',
-    rating: 4.8,
-    emoji: '🌿',
-    title: '낙동강 생태공원 오리런',
-    district: '강서구',
-    distance: '7.8km',
-    duration: '55분',
-    calories: '468kcal',
-    tags: ['반려견 OK', '평탄', '생태경관'],
-    buttonColor: '#4caf7d',
+    image: '/assets/haeundae-snail-route.png',
+    category: '관광',
+    categoryColor: '#60aedd',
+    categoryBg: 'rgba(96,174,221,0.13)',
+    difficulty: '중급',
+    difficultyColor: '#f5a623',
+    difficultyBg: 'rgba(245,166,35,0.13)',
+    rating: null,
+    emoji: '🐌',
+    title: '해운대 달팽이 RUN',
+    district: '해운대구',
+    distance: '11.4km',
+    duration: '약 3시간 11분',
+    calories: '약 623kcal',
+    tags: ['업다운힐', '체력 소모 큼', 'GPX 안내'],
+    buttonColor: '#0570db',
   },
   {
     id: 4,
-    image: '/assets/4421c.png',
+    image: '/assets/seomyeon-yacht-route.png',
     category: '생활권',
     categoryColor: '#7b5ea7',
     categoryBg: 'rgba(123,94,167,0.13)',
-    difficulty: '쉬움',
-    difficultyColor: '#4caf7d',
-    difficultyBg: 'rgba(76,175,125,0.13)',
-    rating: 4.7,
-    emoji: '🏙️',
-    title: '서면 생활권 하트런',
+    difficulty: 'GPS 안내',
+    difficultyColor: '#0570db',
+    difficultyBg: 'rgba(5,112,219,0.13)',
+    rating: null,
+    emoji: '⛵',
+    title: '서면 요트 RUN',
     district: '부산진구',
-    distance: '3.6km',
-    duration: '24분',
-    calories: '216kcal',
-    tags: ['출퇴근', '상권연계', '야간 OK'],
+    distance: '5.98km',
+    duration: '약 40분',
+    calories: '약 327kcal',
+    tags: ['서면', '순환 코스', 'GPX 안내'],
     buttonColor: '#7b5ea7',
   },
   {
@@ -126,8 +127,8 @@ const courses: Course[] = [
     title: '을숙도 반려견 산책런',
     district: '사하구',
     distance: '4.2km',
-    duration: '35분',
-    calories: '252kcal',
+    duration: '약 35분',
+    calories: '약 252kcal',
     tags: ['반려견 필수', '잔디밭', '분수공원'],
     buttonColor: '#e07b39',
   },
@@ -148,7 +149,7 @@ interface CourseComments {
 
 const courseComments: Record<number, CourseComments> = {
   1: {
-    title: '광안리 바다 갈매기런',
+    title: '광안리 댕댕 RUN',
     count: '138명이 이 코스로 뛰었어요!',
     comments: [
       { user: 'User 1', lines: ['광안대교를 향해 뛰어가다 보면 너무 상쾌하고 좋아요~', '중심지와는 달라서 뛰기 좋네요!'] },
@@ -157,31 +158,19 @@ const courseComments: Record<number, CourseComments> = {
     ],
   },
   2: {
-    title: '해운대 해변 돌고래런',
-    count: '61명이 이 코스로 뛰었어요!',
-    comments: [
-      { user: 'User 1', lines: ['해운대 모래사장 라인을 따라 뛰어서 넓고 좋아요!', '전 바다는 해운대가 짱이라 생각...ㅎㅎ'] },
-      { user: 'User 2', lines: ['낮에 뛰면 그늘이 없어서 좀 힘듦... 다들 오후에 뛰시길'] },
-      { user: 'User 3', lines: ['내 최애 코스!!!!!!!!! 이거 안 뛰어본 사람은 허수야', '이 코스가 경치도 좋고 거리도 딱 적당하고 아주 좋음♥'] },
-    ],
+    title: '광안리 갈매기 RUN',
+    count: '아직 등록된 댓글이 없습니다.',
+    comments: [],
   },
   3: {
-    title: '낙동강 생태공원 오리런',
-    count: '47명이 이 코스로 뛰었어요!',
-    comments: [
-      { user: 'User 1', lines: ['서울에 한강이 있다면 부산은 낙동강이 있다!', '언젠가 러너들의 성지가 되리라 믿습니다 ㅋㅋ'] },
-      { user: 'User 2', lines: ['집에서 낙동강이 좀 멀어서 별로 안 가봤었는데, 순위 높길래', '오늘 뛰고 왔네요~ 겨울엔 진짜 오리도 있어서 귀여워요.'] },
-      { user: 'User 3', lines: ['여러분... 노을이 찐입니다. 해질 때쯤 가서 뛰어보세요!!', '오늘 좀 힘든 하루였는데 힐링했어요 ㅠㅠ'] },
-    ],
+    title: '해운대 달팽이 RUN',
+    count: '아직 등록된 댓글이 없습니다.',
+    comments: [],
   },
   4: {
-    title: '서면 생활권 하트런',
-    count: '203명이 이 코스로 뛰었어요!',
-    comments: [
-      { user: 'User 1', lines: ['썸타는 사람이랑 하트런으로 러닝 데이트 했다가 오늘 1일 됐습니다. 기 받아가세요 ㅎㅎ'] },
-      { user: 'User 2', lines: ['서면에 이런 길이 있는 줄 몰랐다 ㄷㄷ 맨날 러닝할 곳 없어서', '헬스장 갔는데 나이스!!'] },
-      { user: 'User 3', lines: ['저희 집 앞부터 시작되는 코스길래 궁금해서 해봤어요.', '앞으로 종종 이렇게 뛸 듯요!'] },
-    ],
+    title: '서면 요트 RUN',
+    count: '아직 등록된 댓글이 없습니다.',
+    comments: [],
   },
   5: {
     title: '을숙도 반려견 산책런',
@@ -197,6 +186,14 @@ const courseComments: Record<number, CourseComments> = {
 export default function CourseListScreen({ onNavigate, onSelectCourse }: Props) {
   const [activeFilter, setActiveFilter] = useState('전체');
   const [commentsFor, setCommentsFor] = useState<number | null>(null);
+  const run = useRun();
+  const locationRequested = useRef(false);
+
+  useEffect(() => {
+    if (locationRequested.current || run.locating || run.mode === 'running' || run.mode === 'locating') return;
+    locationRequested.current = true;
+    run.locate();
+  }, [run.locating, run.mode, run.locate]);
 
   const handleTabChange = (tab: TabId) => {
     if (tab === 'courses') return;
@@ -208,7 +205,7 @@ export default function CourseListScreen({ onNavigate, onSelectCourse }: Props) 
 
   const filteredCourses = activeFilter === '전체'
     ? courses
-    : courses.filter(c => c.category === activeFilter || (activeFilter === '공원' && c.category === '공원'));
+    : courses.filter(c => c.category === activeFilter);
 
   return (
     <div className="flex flex-col h-full bg-[#edf4fb] relative">
@@ -225,25 +222,27 @@ export default function CourseListScreen({ onNavigate, onSelectCourse }: Props) 
         </button>
       </div>
 
+      {/* Scrollable course content */}
+      <div className="flex-1 min-h-0 overflow-y-auto pb-[72px]" style={{ scrollbarGutter: 'stable' }}>
       {/* Subtitle */}
       <p className="px-4 text-[12px] text-[#b4b4b4] mb-3" style={{ fontFamily: 'Noto Sans KR', fontWeight: 400 }}>
         AI가 제공하는 나만의 코스를 경험할 수 있어요
       </p>
 
-      {/* Map Preview */}
-      <div className="mx-4 mb-3 rounded-[20px] overflow-hidden bg-[#dde8f2] relative h-[200px] flex-shrink-0">
-        <img src={mapImg} alt="map" className="absolute inset-0 w-full h-full object-cover" />
-        {/* Route labels */}
-        <div className="absolute bottom-3 left-3 flex gap-2">
-          <div className="backdrop-blur-sm bg-white/80 border border-black/10 rounded-full px-3 py-1 flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-[#60aedd]" />
-            <span className="text-[10px] text-[#60aedd]" style={{ fontFamily: 'Noto Sans KR', fontWeight: 900 }}>강서구청 루프 4.6km</span>
-          </div>
-          <div className="backdrop-blur-sm bg-white/80 border border-black/10 rounded-full px-3 py-1 flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-[#6acf98]" />
-            <span className="text-[10px] text-[#6acf98]" style={{ fontFamily: 'Noto Sans KR', fontWeight: 900 }}>대저 생태런 6.8km</span>
-          </div>
+      {/* Current location map */}
+      <div className="mx-4 mb-3">
+        <div className="relative">
+          <KakaoMap current={run.current} accuracy={run.accuracy} live compact />
+          <button
+            type="button"
+            onClick={run.locate}
+            disabled={run.locating}
+            className="absolute right-2 top-2 z-10 rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-bold text-[#0570db] shadow disabled:opacity-60"
+          >
+            {run.locating ? '위치 확인 중…' : '내 위치 확인'}
+          </button>
         </div>
+        {run.message && /위치|GPS|기기|브라우저/.test(run.message) && <p role="status" className="mt-1 text-[11px] text-[#7b8796]">{run.message}</p>}
       </div>
 
       {/* Filter tabs */}
@@ -267,15 +266,15 @@ export default function CourseListScreen({ onNavigate, onSelectCourse }: Props) 
       </div>
 
       {/* Course cards */}
-      <div className="flex-1 overflow-y-auto pb-[72px] px-4 flex flex-col gap-3">
+      <div className="px-4 flex flex-col gap-3">
         {filteredCourses.map((course) => (
           <div
             key={course.id}
-            className="bg-white border border-[#dce3f1] rounded-2xl overflow-hidden shadow-sm"
+            className="shrink-0 bg-white border border-[#dce3f1] rounded-2xl overflow-hidden shadow-sm"
           >
             {/* Course image */}
-            <div className="relative h-[130px]">
-              <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+            <div className={`relative ${course.id === 2 ? 'h-[190px] bg-[#d9eefa]' : 'h-[130px]'}`}>
+              <img src={course.image} alt={course.title} className="w-full h-full object-cover object-center" />
               <button className="absolute top-2 right-2 w-7 h-7 rounded-full backdrop-blur-sm bg-white/80 shadow flex items-center justify-center">
                 <img src={bookmarkIcon} alt="" className="w-3.5 h-3.5" />
               </button>
@@ -295,8 +294,8 @@ export default function CourseListScreen({ onNavigate, onSelectCourse }: Props) 
                 <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ fontFamily: 'Noto Sans KR', fontWeight: 900, color: course.difficultyColor, backgroundColor: course.difficultyBg }}>
                   {course.difficulty}
                 </span>
-                <span className="text-[10px] text-[#ffb800] leading-none">★</span>
-                <span className="text-[10px] text-[#3d4a5c]" style={{ fontFamily: 'Noto Sans KR', fontWeight: 900 }}>{course.rating}</span>
+                {course.rating !== null && <><span className="text-[10px] text-[#ffb800] leading-none">★</span>
+                  <span className="text-[10px] text-[#3d4a5c]" style={{ fontFamily: 'Noto Sans KR', fontWeight: 900 }}>{course.rating}</span></>}
                 <span className="ml-auto text-[10px] text-[#60aedd]" style={{ fontFamily: 'Noto Sans KR', fontWeight: 700 }}>📍 {course.district}</span>
               </div>
 
@@ -332,7 +331,7 @@ export default function CourseListScreen({ onNavigate, onSelectCourse }: Props) 
                 ))}
               </div>
 
-              {/* CTA + avatars */}
+              {/* Course start and comments */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onSelectCourse ? onSelectCourse(course.id) : onNavigate('course-detail')}
@@ -341,19 +340,24 @@ export default function CourseListScreen({ onNavigate, onSelectCourse }: Props) 
                 >
                   코스 시작
                 </button>
-                {/* Stacked avatar circles */}
                 <button
+                  type="button"
                   onClick={() => setCommentsFor(course.id)}
-                  className="flex items-center active:opacity-70 transition-opacity"
+                  aria-label={`${course.title} 댓글 보기`}
+                  className="w-9 h-9 shrink-0 rounded-full bg-[#edf4fb] text-[#0570db] flex items-center justify-center active:opacity-70 transition-opacity"
                 >
-                  <div className="w-6 h-6 rounded-full bg-[#c8dff5] border-2 border-white" />
-                  <div className="w-6 h-6 rounded-full bg-[#d5eedd] border-2 border-white -ml-1.5" />
-                  <div className="w-6 h-6 rounded-full bg-[#f5ddc8] border-2 border-white -ml-1.5" />
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                    <path d="M20 11.5a8 8 0 0 1-8 8 8.7 8.7 0 0 1-3.2-.6L4 20l1.1-4.1A8 8 0 1 1 20 11.5Z" />
+                    <circle cx="8.5" cy="11.5" r="1" fill="currentColor" stroke="none" />
+                    <circle cx="12" cy="11.5" r="1" fill="currentColor" stroke="none" />
+                    <circle cx="15.5" cy="11.5" r="1" fill="currentColor" stroke="none" />
+                  </svg>
                 </button>
               </div>
             </div>
           </div>
         ))}
+      </div>
       </div>
 
       <BottomNav active="courses" onTabChange={handleTabChange} />
@@ -384,6 +388,7 @@ export default function CourseListScreen({ onNavigate, onSelectCourse }: Props) 
 
               {/* Comment cards */}
               <div className="flex flex-col gap-3 mb-5">
+                {data.comments.length === 0 && <p className="bg-white border border-[#dce3f1] rounded-[16px] px-4 py-4 text-[12px] text-[#7b8796]">아직 등록된 댓글이 없습니다.</p>}
                 {data.comments.map((c, i) => (
                   <div
                     key={i}

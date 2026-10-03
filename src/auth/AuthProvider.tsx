@@ -11,7 +11,7 @@ import { accountDeletionAvailable, firebaseConfigured, getFirebase } from '../li
 import { authError } from './errors';
 import { deleteMemberData } from './deleteMemberData';
 
-export interface MemberProfile { displayName: string; bio: string; email: string }
+export interface MemberProfile { displayName: string; bio: string; email: string; dataVersion?: number; pointsBalance?: number }
 interface AuthState {
   user: User | null;
   profile: MemberProfile | null;
@@ -85,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!existing.exists()) {
             transaction.set(ref, {
               displayName: (user!.displayName || '러너').slice(0, 30), bio: '', email: user!.email || '',
+              dataVersion: 2, pointsBalance: 0,
               createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
             });
           } else if (existing.data().email !== user!.email) {

@@ -6,7 +6,7 @@ import { authError } from '../auth/errors';
 
 export interface Point { latitude: number; longitude: number; timestamp: number; segment: number }
 type Mode = 'idle' | 'locating' | 'running' | 'paused' | 'finished';
-interface Session { id: string; startedAt: number; distance: number; elapsed: number; points: Point[]; segment: number }
+interface Session { id: string; startedAt: number; distance: number; elapsed: number; points: Point[]; segment: number; courseId?: number }
 export function distanceMeters(a: Point, b: Point) {
   const rad = Math.PI / 180;
   const dLat = (b.latitude - a.latitude) * rad;
@@ -32,7 +32,7 @@ const emptySession = (): Session => ({ id: '', startedAt: 0, distance: 0, elapse
 interface RunContextValue {
   mode: Mode; session: Session; elapsed: number; message: string; accuracy: number | null;
   current: Point | null; locating: boolean; saving: boolean; saved: boolean;
-  locate: () => void; start: () => void; pause: () => void; resume: () => void;
+  locate: () => void; start: (courseId?: number) => void; pause: () => void; resume: () => void;
   finish: () => void; save: () => Promise<void>; reset: () => void;
 }
 const RunContext = createContext<RunContextValue | null>(null);
@@ -155,10 +155,10 @@ export function RunProvider({ children }: { children: ReactNode }) {
       pause(); setMessage(geoError(error));
     }, { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
   }
-  function start() {
-    if (modeRef.current !== 'idle') return;
-    sessionRef.current = { ...emptySession(), id: crypto.randomUUID() };
-    setSaved(false); publish(); watchPosition();
+  function start(courseId?: number) {
+    if (modeRef.current !== 'idle' && !(modeRef.current === 'finished' && saved)) return;
+    sessionRef.current = { ...emptySession(), id: crypto.randomUUID(), ...(courseId === undefined ? {} : { courseId }) };
+    setCurrent(null); setAccuracy(null); setSaved(false); publish(); watchPosition();
   }
   function resume() {
     if (modeRef.current !== 'paused' || sessionRef.current.points.length >= 3000 || elapsedNow() >= 86400) return;

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
+import { useActivity } from '../running/ActivityProvider';
 import AccountSettings, { ProfileEditor } from '../components/AccountSettings';
 import type { Screen } from '../App';
 
@@ -9,6 +10,8 @@ interface Props {
 
 export default function ProfileScreen({ onNavigate }: Props) {
   const { user, profile } = useAuth();
+  const { runs, totalDistanceMeters, activeDays, badgeCount } = useActivity();
+  const freshAccount = profile?.dataVersion === 2;
   const [toggleReminder, setToggleReminder] = useState(true);
   const [toggleReport, setToggleReport] = useState(true);
   const [toggleRanking, setToggleRanking] = useState(false);
@@ -82,12 +85,17 @@ export default function ProfileScreen({ onNavigate }: Props) {
 
         {/* Stats bar */}
         <div className="w-full bg-white/10 rounded-[16px] flex overflow-hidden">
-          {[
+          {(freshAccount ? [
+            { val: (totalDistanceMeters / 1000).toFixed(1), unit: 'km', label: '누적 거리' },
+            { val: String(runs.length), unit: '회', label: '러닝 횟수' },
+            { val: String(badgeCount), unit: '개', label: '배지' },
+            { val: String(activeDays), unit: '일', label: '활동 일수' },
+          ] : [
             { val: '124.6', unit: 'km', label: '누적 거리' },
             { val: '38', unit: '회', label: '러닝 횟수' },
             { val: '10', unit: '개', label: '배지' },
             { val: '87', unit: '일', label: '활동 일수' },
-          ].map((s, i) => (
+          ]).map((s, i) => (
             <div
               key={s.label}
               className="flex-1 flex flex-col items-center py-3"
@@ -121,7 +129,7 @@ export default function ProfileScreen({ onNavigate }: Props) {
           <div className="mx-4 bg-white border border-[#d6e9f8] rounded-[24px] overflow-hidden">
             <Row icon="🎯" label="주간 목표 거리" value="30 km" />
             <Row icon="⚡" label="선호 페이스" value={`7'00" /km`} />
-            <Row icon="🐕" label="반려견 프로필" value="해피 · 골든리트리버" />
+            <Row icon="🐕" label="반려견 프로필" value={freshAccount ? '등록된 정보 없음' : '해피 · 골든리트리버'} />
           </div>
         </div>
 
@@ -139,8 +147,8 @@ export default function ProfileScreen({ onNavigate }: Props) {
         <div className="pt-5">
           <p className="text-[11px] font-black text-[#94afc8] tracking-[0.55px] px-5 mb-1.5">연결된 서비스</p>
           <div className="mx-4 bg-white border border-[#d6e9f8] rounded-[24px] overflow-hidden">
-            <Row icon="⌚" label="Apple Watch" value="연결됨" />
-            <Row icon="📱" label="건강 앱" value="동기화 중" />
+            <Row icon="⌚" label="Apple Watch" value={freshAccount ? '연결 안 됨' : '연결됨'} />
+            <Row icon="📱" label="건강 앱" value={freshAccount ? '연결 안 됨' : '동기화 중'} />
             <Row icon="🗺️" label="Strava" value="연결 안 됨" />
           </div>
         </div>

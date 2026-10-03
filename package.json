@@ -11,6 +11,7 @@
     "dev:local": "vite --host localhost --port 5174 --strictPort",
     "typecheck": "tsc --noEmit",
     "test:maps": "node --test scripts/kakao-map.test.mjs",
+    "test:routes": "node --test scripts/course-route.test.mjs",
     "firebase:check": "node scripts/check-firebase-config.mjs"
   },
   "dependencies": {

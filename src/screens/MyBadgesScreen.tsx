@@ -1,5 +1,7 @@
 import { brandLogo } from '../lib/assets';
 import { useState } from 'react';
+import { useAuth } from '../auth/AuthProvider';
+import { useActivity } from '../running/ActivityProvider';
 import type { Screen } from '../App';
 
 interface Props {
@@ -23,6 +25,10 @@ const BADGES = [
 ];
 
 export default function MyBadgesScreen({ onNavigate }: Props) {
+  const { profile } = useAuth();
+  const { totalDistanceMeters, longestStreak, badgeCount } = useActivity();
+  const freshAccount = profile?.dataVersion === 2;
+  const distanceKm = totalDistanceMeters / 1000;
   const [activeFilter, setActiveFilter] = useState('전체');
 
   return (
@@ -44,7 +50,7 @@ export default function MyBadgesScreen({ onNavigate }: Props) {
       </div>
       <div className="px-5 pb-4 shrink-0">
         <p className="font-bold text-[14px] text-black leading-6">열심히 달려온</p>
-        <p className="font-bold text-[14px] text-black leading-6">부기 님의 기록을 분석해볼까요?</p>
+        <p className="font-bold text-[14px] text-black leading-6">{freshAccount ? `${profile?.displayName || '러너'} 님의 배지를 모아볼까요?` : '부기 님의 기록을 분석해볼까요?'}</p>
       </div>
 
       {/* Scrollable */}
@@ -55,8 +61,8 @@ export default function MyBadgesScreen({ onNavigate }: Props) {
             <div>
               <p className="text-[11px] text-[#94afc8]">획득한 배지</p>
               <div className="flex items-baseline gap-1">
-                <p className="font-black text-[30px] text-[#0d1b2e] leading-none">10</p>
-                <p className="text-[14px] text-[#94afc8]">/ 18개</p>
+                <p className="font-black text-[30px] text-[#0d1b2e] leading-none">{freshAccount ? badgeCount : 10}</p>
+                <p className="text-[14px] text-[#94afc8]">/ {freshAccount ? BADGES.length : 18}개</p>
               </div>
             </div>
             <div
@@ -64,24 +70,24 @@ export default function MyBadgesScreen({ onNavigate }: Props) {
               style={{ background: 'linear-gradient(146deg, #43e97b 0%, #38f9d7 100%)' }}
             >
               <span className="text-[24px] leading-none mb-1">🌳</span>
-              <p className="font-black text-[10px] text-white">이번 달 +2개</p>
+              <p className="font-black text-[10px] text-white">{freshAccount ? `획득 ${badgeCount}개` : '이번 달 +2개'}</p>
             </div>
           </div>
 
           {/* Progress bar */}
           <div className="flex items-center gap-2 mb-3">
             <div className="flex-1 h-[8px] bg-[#d6e9f8] rounded-full overflow-hidden">
-              <div className="h-full bg-[#0570db] rounded-full" style={{ width: '59%' }} />
+              <div className="h-full bg-[#0570db] rounded-full" style={{ width: freshAccount ? `${Math.round(badgeCount / BADGES.length * 100)}%` : '59%' }} />
             </div>
-            <p className="font-bold text-[11px] text-[#0570db]">59%</p>
+            <p className="font-bold text-[11px] text-[#0570db]">{freshAccount ? `${Math.round(badgeCount / BADGES.length * 100)}%` : '59%'}</p>
           </div>
 
           {/* Bottom stats */}
           <div className="border-t border-[#d6e9f8] pt-3 flex">
             {[
-              { icon: '🔥', label: '배지 획득률', val: '상위 20%' },
-              { icon: '🏃', label: '배지 타입', val: '새벽러너' },
-              { icon: '⭐', label: '희귀 배지', val: '2개' },
+              { icon: '🔥', label: '배지 획득률', val: freshAccount ? `${Math.round(badgeCount / BADGES.length * 100)}%` : '상위 20%' },
+              { icon: '🏃', label: '배지 타입', val: freshAccount ? badgeCount ? '러너' : '없음' : '새벽러너' },
+              { icon: '⭐', label: '희귀 배지', val: freshAccount ? '0개' : '2개' },
             ].map((s, i) => (
               <div
                 key={s.label}
@@ -115,7 +121,17 @@ export default function MyBadgesScreen({ onNavigate }: Props) {
 
         {/* Badge grid */}
         <div className="px-4 grid grid-cols-2 gap-3">
-          {BADGES.map((badge) => (
+          {BADGES.map((original, index) => {
+            const goal = [1, 10, 50, 100, 200, 500, 7, 14, 21, 30, 100][index];
+            const current = index < 6 ? distanceKm : longestStreak;
+            const badge = freshAccount ? {
+              ...original, unlocked: current >= goal, isNew: false,
+              date: current >= goal ? '달성' : undefined,
+              current: index < 6 ? Number(current.toFixed(1)) : current,
+              goal, unit: index < 6 ? ' km' : '일',
+              progress: Math.min(100, Math.floor(current / goal * 100)),
+            } : original;
+            return (
             <div
               key={badge.name}
               className="bg-white rounded-[24px] p-4 flex flex-col items-center relative overflow-hidden"
@@ -148,7 +164,7 @@ export default function MyBadgesScreen({ onNavigate }: Props) {
               ) : (
                 <div className="w-full">
                   <div className="flex justify-between mb-1">
-                    <p className="text-[9px] text-[#94afc8]">{badge.current} / {badge.goal}{badge.unit ?? ' km'}</p>
+                  <p className="text-[9px] text-[#94afc8]">{badge.current} / {badge.goal}{badge.unit ?? ' km'}</p>
                     <p className="font-bold text-[9px] text-[#0570db]">{badge.progress}%</p>
                   </div>
                   <div className="h-[6px] bg-[#e8edf2] rounded-full overflow-hidden">
@@ -157,7 +173,7 @@ export default function MyBadgesScreen({ onNavigate }: Props) {
                 </div>
               )}
             </div>
-          ))}
+          ); })}
         </div>
       </div>
     </div>

@@ -13,10 +13,12 @@ service cloud.firestore {
     function validProfile() {
       let data = request.resource.data;
       return data.keys().hasAll(['displayName', 'bio', 'email', 'createdAt', 'updatedAt'])
-        && data.keys().hasOnly(['displayName', 'bio', 'email', 'createdAt', 'updatedAt', 'deleting'])
+        && data.keys().hasOnly(['displayName', 'bio', 'email', 'createdAt', 'updatedAt', 'deleting', 'dataVersion', 'pointsBalance'])
         && data.displayName is string && data.displayName.size() > 0 && data.displayName.size() <= 30
         && data.email is string && data.email == request.auth.token.email
         && data.bio is string && data.bio.size() <= 100
+        && (!data.keys().hasAny(['dataVersion', 'pointsBalance'])
+          || (data.dataVersion == 2 && data.pointsBalance is int && data.pointsBalance == 0))
         && data.updatedAt == request.time;
     }
     match /rundayUsers/{uid} {
@@ -24,6 +26,7 @@ service cloud.firestore {
       allow create: if owner(uid) && validProfile() && !request.resource.data.keys().hasAny(['deleting'])
         && request.resource.data.createdAt == request.time;
       allow update: if owner(uid) && validProfile() && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'bio', 'email', 'updatedAt', 'deleting'])
         && ((resource.data.get('deleting', false) == false && !request.resource.data.keys().hasAny(['deleting']))
           || (recent(uid) && request.resource.data.deleting == true
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deleting', 'updatedAt'])));

@@ -1,5 +1,6 @@
 import { brandLogo } from '../lib/assets';
 import BottomNav from '../components/BottomNav';
+import { useAuth } from '../auth/AuthProvider';
 import type { Screen } from '../App';
 
 interface Props {
@@ -7,6 +8,8 @@ interface Props {
 }
 
 export default function BenefitsScreen({ onNavigate }: Props) {
+  const { profile } = useAuth();
+  const freshAccount = profile?.dataVersion === 2;
   return (
     <div className="flex flex-col h-full relative bg-[#edf4fb]">
       {/* Header */}
@@ -40,16 +43,16 @@ export default function BenefitsScreen({ onNavigate }: Props) {
               <p className="font-normal text-[rgba(255,255,255,0.6)] text-[12px]">내역 보기 →</p>
             </div>
             <div className="flex gap-1 items-end mt-1">
-              <p className="font-black text-[32px] text-white leading-9">4,820</p>
+              <p className="font-black text-[32px] text-white leading-9">{freshAccount ? (profile?.pointsBalance ?? 0).toLocaleString() : '4,820'}</p>
               <p className="font-normal text-[#9fc7f9] text-[14px] pb-1">P</p>
             </div>
             <div className="w-full mt-4">
               <div className="flex items-center justify-between">
-                <p className="font-normal text-[#9fc7f9] text-[11px]">다음 등급까지 1,180P</p>
-                <p className="font-normal text-[rgba(255,255,255,0.5)] text-[11px]">골드</p>
+                <p className="font-normal text-[#9fc7f9] text-[11px]">{freshAccount ? '첫 포인트를 모아보세요' : '다음 등급까지 1,180P'}</p>
+                <p className="font-normal text-[rgba(255,255,255,0.5)] text-[11px]">{freshAccount ? '시작' : '골드'}</p>
               </div>
               <div className="bg-[rgba(255,255,255,0.2)] rounded-full h-[6px] mt-1 w-full overflow-hidden">
-                <div className="bg-white h-[6px] rounded-full" style={{ width: '80%' }} />
+                <div className="bg-white h-[6px] rounded-full" style={{ width: freshAccount ? '0%' : '80%' }} />
               </div>
             </div>
             <div className="flex gap-2 mt-4 w-full">
@@ -70,7 +73,7 @@ export default function BenefitsScreen({ onNavigate }: Props) {
           </div>
           <p className="font-normal text-[12px] text-[#7b8796] mb-2">최근 나의 적립 내역을 살펴보세요!</p>
           <div className="bg-white rounded-[24px] px-5 pt-1 drop-shadow-[0px_2px_6px_rgba(5,112,219,0.06)]">
-            {[
+            {freshAccount ? <p className="py-5 text-[12px] text-[#7b8796]">아직 포인트 적립·사용 내역이 없습니다.</p> : [
               { icon: '/assets/88fd6.svg', iconBg: '#e8f4ff', title: '광안리 5km 완주', time: '오늘 07:38', point: '+200P', pointColor: '#0570db' },
               { icon: '/assets/88fd6.svg', iconBg: '#e8f4ff', title: 'SNS 인증샷 공유', time: '오늘 08:12', point: '+50P', pointColor: '#0570db' },
               { icon: '/assets/88fd6.svg', iconBg: '#e8f4ff', title: '카페 파도 방문 인증', time: '어제 09:22', point: '+100P', pointColor: '#0570db' },
@@ -175,7 +178,7 @@ export default function BenefitsScreen({ onNavigate }: Props) {
             <p className="font-normal text-[12px] text-[#0570db]">전체보기</p>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-1">
-            {[
+            {freshAccount ? <p className="bg-white rounded-[24px] p-4 text-[12px] text-[#7b8796] w-full">보유한 쿠폰이 없습니다.</p> : [
               { emoji: '🛒', iconBg: 'rgba(5,112,219,0.09)', title: 'GS25 3천원 할인쿠폰', expiry: '~2026.09.30', btnColor: '#0570db' },
               { emoji: '👟', iconBg: 'rgba(29,27,32,0.09)', title: '나이키 10% 할인코드', expiry: '~2026.11.15', btnColor: '#1d1b20' },
             ].map((coupon, i) => (

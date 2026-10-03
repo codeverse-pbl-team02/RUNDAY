@@ -1,4 +1,5 @@
 import { brandLogo } from '../lib/assets';
+import { useAuth } from '../auth/AuthProvider';
 import type { Screen } from '../App';
 
 interface Props {
@@ -21,6 +22,18 @@ const LIST = [
 ];
 
 export default function RankingScreen({ onNavigate }: Props) {
+  const { profile } = useAuth();
+  if (profile?.dataVersion === 2) return <div className="flex flex-col h-full bg-[#edf4fb]">
+    <div className="h-14 px-4 flex items-center gap-3">
+      <button onClick={() => onNavigate('home')} className="text-[#0570db] p-2" aria-label="홈으로">‹</button>
+      <h1 className="font-bold text-[18px]">러닝 랭킹</h1>
+    </div>
+    <div className="mx-4 mt-4 bg-white border border-[#dce3f1] rounded-3xl p-5">
+      <p className="font-bold text-[#0d1b2e]">아직 참여한 랭킹이 없습니다.</p>
+      <p className="mt-2 text-[12px] text-[#7b8796]">내 기록은 GPS 러닝 기록에서 확인할 수 있습니다.</p>
+      <button onClick={() => onNavigate('records')} className="mt-4 rounded-full bg-[#0570db] text-white text-[13px] font-bold px-4 py-2">내 기록 보기</button>
+    </div>
+  </div>;
   return (
     <div className="flex flex-col h-full bg-[#edf4fb]">
       {/* Header */}
