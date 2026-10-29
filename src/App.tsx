@@ -23,6 +23,7 @@ import MyBadgesScreen from './screens/MyBadgesScreen';
 import RankingScreen from './screens/RankingScreen';
 import { ServiceAreaProvider } from './location/ServiceAreaProvider';
 import RoutePlannerScreen from './screens/RoutePlannerScreen';
+import { RunningServiceGate } from './location/RunningServiceGate';
 
 export type Screen =
   | 'running'
@@ -101,20 +102,20 @@ function MemberApp() {
   };
 
   return (
-    <ServiceAreaProvider enabled={screen === 'home' || screen === 'courses' || screen === 'route-planner'}>
+    <ServiceAreaProvider enabled={run.mode === 'running' || run.mode === 'locating' || ['home', 'courses', 'course-detail', 'route-planner', 'running'].includes(screen)}>
     <div className="relative bg-white" style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
       {screen === 'home' && <HomeScreen onNavigate={setScreen} onStartFreeRun={openFreeRun} onSelectCourse={openCourse} />}
-      {screen === 'route-planner' && <RoutePlannerScreen onBack={() => setScreen('home')}
-        onOpenRunning={() => setScreen('running')} onStart={route => { const started = run.startRoute(route); if (started) setScreen('running'); return started; }} />}
+      {screen === 'route-planner' && <RunningServiceGate onBack={() => setScreen('home')}><RoutePlannerScreen onBack={() => setScreen('home')}
+        onOpenRunning={() => setScreen('running')} onStart={route => { const started = run.startRoute(route); if (started) setScreen('running'); return started; }} /></RunningServiceGate>}
       {screen === 'courses' && (
         <CourseListScreen
           onNavigate={setScreen}
           onSelectCourse={openCourse}
         />
       )}
-      {screen === 'course-detail' && <CourseDetailScreen onNavigate={setScreen} courseId={selectedCourseId} onStartCourse={(id) => { if (run.mode === 'idle' || (run.mode === 'finished' && run.saved)) run.start(id); setScreen('running'); }} />}
+      {screen === 'course-detail' && <RunningServiceGate onBack={() => setScreen('home')}><CourseDetailScreen onNavigate={setScreen} courseId={selectedCourseId} onStartCourse={(id) => { if (run.mode === 'idle' || (run.mode === 'finished' && run.saved)) { if (!run.start(id)) return; } setScreen('running'); }} /></RunningServiceGate>}
       {screen === 'records' && <RunHistory onStart={openFreeRun} onBack={() => setScreen('home')} />}
-      {screen === 'running' && <RunningScreen onBack={() => setScreen('home')} onRecords={() => setScreen('records')} />}
+      {screen === 'running' && <RunningServiceGate onBack={() => setScreen('home')}><RunningScreen onBack={() => setScreen('home')} onRecords={() => setScreen('records')} /></RunningServiceGate>}
       {screen !== 'running' && <RunBanner onOpen={() => setScreen('running')} />}
       {screen === 'benefits' && <BenefitsScreen onNavigate={setScreen} />}
       {screen === 'esg' && <ESGScreen onNavigate={setScreen} onPloggingVerify={(title) => { setPloggingChallenge(title); setScreen('plogging-verify'); }} />}

@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { useRun } from '../running/RunProvider';
 import { useServiceAreaState } from './useServiceAreaState';
 import type { ServiceAreaState } from './serviceArea';
@@ -9,6 +9,9 @@ export function ServiceAreaProvider({ enabled, children }: { enabled: boolean; c
   const run = useRun();
   const area = useServiceAreaState({ point: run.current, accuracy: run.accuracy,
     locating: run.locating || run.mode === 'locating', locationError: run.locationError, enabled });
+  useEffect(() => {
+    if (area.status === 'outside' && (run.mode === 'running' || run.mode === 'locating')) run.pause();
+  }, [area.status, run.mode, run.pause]);
   return <ServiceAreaContext.Provider value={area}>{children}</ServiceAreaContext.Provider>;
 }
 

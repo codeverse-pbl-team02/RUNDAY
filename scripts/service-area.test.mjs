@@ -22,6 +22,36 @@ const policy = load('../src/location/serviceArea.ts');
 const busan = { region_type: 'B', region_1depth_name: '부산광역시', address_name: '부산광역시 수영구 민락동' };
 const seoul = { region_type: 'B', region_1depth_name: '서울특별시', address_name: '서울특별시 중구' };
 
+test('running service gate permits Busan only and keeps existing recordings saveable outside', () => {
+  let state = policy.classifyRegion(seoul);
+  let pauses = 0;
+  const effects = [];
+  const run = { mode: 'running', current: {latitude:37.56,longitude:126.97,timestamp:Date.now()},
+    locating:false, locationError:null, saved:false, session:{points:[{}]},
+    pause: () => { pauses++; }, locate() {} };
+  const { RunningServiceGate } = load('../src/location/RunningServiceGate.tsx', {
+    react: { ...React, useEffect: fn => effects.push(fn) },
+    '../running/RunProvider': { useRun: () => run },
+    './ServiceAreaProvider': { useServiceArea: () => state },
+  });
+  const element = React.createElement(RunningServiceGate, {onBack() {}}, React.createElement('div',null,'RUNNING-CONTROLS'));
+  let html = renderToStaticMarkup(element);
+  assert.ok(html.includes('서비스 이용 가능 위치가 아닙니다'));
+  assert.ok(!html.includes('RUNNING-CONTROLS'));
+  assert.ok(html.includes('지금까지의 러닝 종료 후 저장'));
+  effects.splice(0).forEach(fn => fn());
+  assert.equal(pauses,1);
+  run.mode = 'idle';
+  for (const status of ['idle','checking','locating','error']) {
+    state = policy.areaState(status, '위치를 확인해 주세요');
+    html = renderToStaticMarkup(element);
+    assert.ok(!html.includes('RUNNING-CONTROLS'));
+    assert.ok(!html.includes('서비스 이용 가능 위치가 아닙니다'));
+  }
+  state = policy.classifyRegion(busan);
+  assert.ok(renderToStaticMarkup(element).includes('RUNNING-CONTROLS'));
+});
+
 function setup({ configured = true } = {}) {
   let now = 1_800_000_000_000;
   let cursor = 0;
@@ -181,7 +211,7 @@ test('outside notice keeps actual GPS map coordinates and offers a working cours
   const html = renderToStaticMarkup(element);
   assert.equal(captured.current, fix);
   assert.ok(html.includes('현재 부산 외 지역입니다.'));
-  assert.ok(html.includes('자유 러닝은 이용할 수 있습니다.'));
+  assert.ok(html.includes('자유 러닝과 드로잉 러닝은 부산에서만 이용할 수 있습니다.'));
   const notice = ServiceAreaNotice(captured.overlay.props);
   const children = notice.props.children[2].props.children;
   children.find(child => child.type === 'button').props.onClick();
