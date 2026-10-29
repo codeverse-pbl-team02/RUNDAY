@@ -1,5 +1,7 @@
 {
-  "description": "This web application offers a seamless user experience for Android devices, providing essential features optimized for mobile screens to enhance accessibility and engagement.",
+  "title": "뛴데이",
+  "description": "부산 러닝 코스를 찾고, 나만의 경로로 달리고, 러닝 기록을 남겨보세요. 뛴데이와 함께 시작하세요.",
+  "language": "ko",
   "robots": {
     "index": false
   },
