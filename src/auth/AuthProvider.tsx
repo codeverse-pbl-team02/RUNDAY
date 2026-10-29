@@ -3,13 +3,14 @@ import {
   browserLocalPersistence, browserSessionPersistence, createUserWithEmailAndPassword,
   deleteUser, EmailAuthProvider, GoogleAuthProvider, onIdTokenChanged, reauthenticateWithCredential,
   reauthenticateWithPopup, sendPasswordResetEmail,
-  setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile,
+  setPersistence, signInWithCredential, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile,
   type User,
 } from 'firebase/auth';
 import { doc, onSnapshot, runTransaction, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { accountDeletionAvailable, firebaseConfigured, getFirebase } from '../lib/firebase';
 import { authError } from './errors';
 import { deleteMemberData } from './deleteMemberData';
+import { isNative, nativeGoogleCredential } from '../platform/native';
 
 export interface MemberProfile { displayName: string; bio: string; email: string; dataVersion?: number; pointsBalance?: number }
 interface AuthState {
@@ -139,7 +140,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     async googleLogin(remember) {
       await persistence(remember);
-      await signInWithPopup(getFirebase().auth, new GoogleAuthProvider());
+      if (isNative) await signInWithCredential(getFirebase().auth, await nativeGoogleCredential());
+      else await signInWithPopup(getFirebase().auth, new GoogleAuthProvider());
     },
     async logout() { await signOut(getFirebase().auth); },
     resetPassword,
@@ -163,7 +165,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!password) throw new Error('현재 비밀번호를 입력해 주세요.');
           await reauthenticateWithCredential(current, EmailAuthProvider.credential(current.email!, password));
         } else {
-          await reauthenticateWithPopup(current, new GoogleAuthProvider());
+          if (isNative) await reauthenticateWithCredential(current, await nativeGoogleCredential());
+          else await reauthenticateWithPopup(current, new GoogleAuthProvider());
         }
         await current.getIdToken(true);
         // Persist retry intent before any destructive operation; never store credentials.

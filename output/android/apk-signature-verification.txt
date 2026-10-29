@@ -1,0 +1,17 @@
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): false
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=Rundy Upload, OU=Android, O=Rundy, C=KR
+Signer #1 certificate SHA-256 digest: 37b138762debef95494ef10a6a10d870263429d162f38b19aaad516a3194488d
+Signer #1 certificate SHA-1 digest: d24dfe85109365c90f017c26f877e0ee59a2e95e
+Signer #1 certificate MD5 digest: 50abb487d398f0d0fc09d129e2ed6dcc
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 3072
+Signer #1 public key SHA-256 digest: 26ecbbc022ad9bb4e12dbf912331ff42223eb64db041a793bf370accf756595d
+Signer #1 public key SHA-1 digest: d2c0a064c35ece80ebffbd92fb6bd13e579b58bf
+Signer #1 public key MD5 digest: 5ef577f3ead148450097940459a06772

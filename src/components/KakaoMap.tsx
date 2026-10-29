@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { kakaoMapConfigured, loadKakaoMaps, type KakaoMaps, type MapInstance, type MapOverlay } from '../lib/kakaoMap';
 import type { Point } from '../running/RunProvider';
 import type { GeoPoint } from '../running/courseGuide';
+import { useBackAction } from '../navigation/useBackAction';
 
 const noPoints: Point[] = [];
 const noGuide: GeoPoint[] = [];
@@ -10,8 +11,10 @@ function valid(point: GeoPoint) {
     && Math.abs(point.latitude) <= 90 && Math.abs(point.longitude) <= 180;
 }
 
-export function KakaoMap({ current = null, points = noPoints, guidePoints = noGuide, completedGuidePoints = noGuide, accuracy = null, live = false, compact = false }: {
+export function KakaoMap({ current = null, points = noPoints, guidePoints = noGuide, completedGuidePoints = noGuide, accuracy = null, live = false, compact = false, dense = false, overlay }: {
   current?: Point | null; points?: Point[]; guidePoints?: GeoPoint[]; completedGuidePoints?: GeoPoint[]; accuracy?: number | null; live?: boolean; compact?: boolean;
+  overlay?: ReactNode;
+  dense?: boolean;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const instance = useRef<{ sdk: KakaoMaps; map: MapInstance } | null>(null);
@@ -19,11 +22,13 @@ export function KakaoMap({ current = null, points = noPoints, guidePoints = noGu
   const [attempt, setAttempt] = useState(0);
   const [centerRequest, setCenterRequest] = useState(0);
   const [showOverview, setShowOverview] = useState(false);
+  const [interactive, setInteractive] = useState(false);
   const route = points.filter(valid);
   const guide = guidePoints.filter(valid);
   const recordedLocation = current && valid(current) ? current : route[route.length - 1];
   const location = recordedLocation ?? guide[0];
   const hasLocation = Boolean(location);
+  useBackAction(interactive && hasLocation && status === 'ready', () => setInteractive(false));
   const initial = useRef(location);
   initial.current = location;
 
@@ -37,6 +42,8 @@ export function KakaoMap({ current = null, points = noPoints, guidePoints = noGu
       if (disposed || !initial.current) return;
       const point = initial.current;
       const map = new sdk.Map(element, { center: new sdk.LatLng(point.latitude, point.longitude), level: 3 });
+      map.setDraggable(false);
+      map.setZoomable(false);
       instance.current = { sdk, map };
       observer = new ResizeObserver(() => {
         const center = map.getCenter();
@@ -55,6 +62,12 @@ export function KakaoMap({ current = null, points = noPoints, guidePoints = noGu
   }, [hasLocation, attempt]);
 
   useEffect(() => {
+    if (status !== 'ready' || !instance.current) return;
+    instance.current.map.setDraggable(interactive);
+    instance.current.map.setZoomable(interactive);
+  }, [status, attempt, interactive]);
+
+  useEffect(() => {
     if (status !== 'ready' || !instance.current || !location) return;
     const { sdk, map } = instance.current;
     const overlays: MapOverlay[] = [];
@@ -64,6 +77,10 @@ export function KakaoMap({ current = null, points = noPoints, guidePoints = noGu
         path: guide.map(p => new sdk.LatLng(p.latitude, p.longitude)),
         strokeWeight: 5, strokeColor: '#a9b6c7', strokeOpacity: 0.9 }));
       overlays.push(new sdk.Marker({ map, position: new sdk.LatLng(guide[0].latitude, guide[0].longitude), title: '코스 출발점' }));
+      const end = guide[guide.length - 1];
+      if (Math.abs(end.latitude - guide[0].latitude) + Math.abs(end.longitude - guide[0].longitude) > 0.0001) {
+        overlays.push(new sdk.Marker({ map, position: new sdk.LatLng(end.latitude, end.longitude), title: '코스 도착점' }));
+      }
     }
     if (recordedLocation) overlays.push(new sdk.Marker({ map, position, title: current ? '현재 위치' : '러닝 종료 위치' }));
     if (current && accuracy !== null && Number.isFinite(accuracy) && accuracy > 0) {
@@ -87,19 +104,22 @@ export function KakaoMap({ current = null, points = noPoints, guidePoints = noGu
     if (completedGuidePoints.length > 1) overlays.push(new sdk.Polyline({ map,
       path: completedGuidePoints.map(p => new sdk.LatLng(p.latitude, p.longitude)),
       strokeWeight: 6, strokeColor: '#0570db', strokeOpacity: 1 }));
-    if (guide.length > 1 && (showOverview || !recordedLocation)) {
-      const bounds = new sdk.LatLngBounds();
-      guide.forEach(p => bounds.extend(new sdk.LatLng(p.latitude, p.longitude)));
-      if (!live) route.forEach(p => bounds.extend(new sdk.LatLng(p.latitude, p.longitude)));
-      map.setBounds(bounds, 32, 32, 32, 32);
-    } else if (route.length > 1 && !live) {
-      const bounds = new sdk.LatLngBounds();
-      route.forEach(p => bounds.extend(new sdk.LatLng(p.latitude, p.longitude)));
-      map.setBounds(bounds, 32, 32, 32, 32);
-    } else map.setCenter(position);
+    // Keep GPS updates from moving the camera while the user explores the map.
+    if (!interactive) {
+      if (guide.length > 1 && (showOverview || !recordedLocation)) {
+        const bounds = new sdk.LatLngBounds();
+        guide.forEach(p => bounds.extend(new sdk.LatLng(p.latitude, p.longitude)));
+        if (!live) route.forEach(p => bounds.extend(new sdk.LatLng(p.latitude, p.longitude)));
+        map.setBounds(bounds, 32, 32, 32, 32);
+      } else if (route.length > 1 && !live) {
+        const bounds = new sdk.LatLngBounds();
+        route.forEach(p => bounds.extend(new sdk.LatLng(p.latitude, p.longitude)));
+        map.setBounds(bounds, 32, 32, 32, 32);
+      } else map.setCenter(position);
+    }
     return () => overlays.forEach(overlay => overlay.setMap(null));
     // Primitive coordinates avoid redrawing the map on the elapsed-time timer.
-  }, [status, attempt, points, guidePoints, completedGuidePoints, location?.latitude, location?.longitude, current !== null, accuracy, live, centerRequest, showOverview]);
+  }, [status, attempt, points, guidePoints, completedGuidePoints, location?.latitude, location?.longitude, current !== null, accuracy, live, centerRequest, showOverview, interactive]);
 
   const message = !kakaoMapConfigured ? '지도를 준비 중입니다. 위치 확인과 러닝 기록은 이용할 수 있습니다.'
     : !hasLocation ? '위치를 확인하면 주변 지도가 표시됩니다.'
@@ -107,12 +127,17 @@ export function KakaoMap({ current = null, points = noPoints, guidePoints = noGu
     : '지도를 불러오는 중…';
   return <div className={compact ? 'relative' : 'mt-3'}>
     <div className={`relative isolate overflow-hidden ${compact ? 'rounded-[20px]' : 'rounded-2xl'} bg-[#f5f8fc]`}>
-      <div ref={container} role="region" aria-label={compact ? '현재 위치 지도' : live ? '현재 위치와 러닝 경로 지도' : '위치와 이동 경로 지도'} className={`${compact ? 'h-[200px]' : 'h-[240px]'} w-full`} />
+      <div ref={container} role="region" aria-label={compact ? '현재 위치 지도' : live ? '현재 위치와 러닝 경로 지도' : '위치와 이동 경로 지도'} className={`${compact ? overlay ? 'h-[320px]' : 'h-[200px]' : 'h-[240px]'} w-full`} style={{ height: dense ? overlay ? 240 : 120 : undefined, pointerEvents: interactive ? 'auto' : 'none', touchAction: interactive ? 'none' : 'pan-y' }} />
       {(!kakaoMapConfigured || !hasLocation || status !== 'ready') && <div role="status" className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 px-5 text-center text-[12px] text-[#7b8796] bg-[#f5f8fc]">
         <p>{message}</p>
         {kakaoMapConfigured && hasLocation && status === 'error' && <button type="button" onClick={() => setAttempt(a => a + 1)} className="rounded-full border border-[#0570db] px-4 py-2 text-[#0570db]">지도 다시 불러오기</button>}
       </div>}
+      {overlay && hasLocation && <div className="absolute bottom-2 left-2 right-2 z-20">{overlay}</div>}
     </div>
-    {kakaoMapConfigured && hasLocation && status === 'ready' && <button type="button" onClick={() => { if (guide.length > 1 && live) setShowOverview(v => !v); else setCenterRequest(v => v + 1); }} className={compact ? 'absolute bottom-2 right-2 z-10 rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-bold text-[#0570db] shadow' : 'mt-2 text-[12px] text-[#0570db] py-1'}>{guide.length > 1 && live ? (showOverview ? '현재 위치로 이동' : '코스 전체 보기') : route.length > 1 && !live ? '전체 경로 보기' : '현재 위치로 이동'}</button>}
+    {kakaoMapConfigured && hasLocation && status === 'ready' && <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[12px] text-[#0570db]">
+      <button type="button" aria-pressed={interactive} onClick={() => setInteractive(v => !v)} className="rounded-full border border-[#dce3f1] bg-white px-3 py-2 font-bold">{interactive ? '지도 조작 끝내기' : '지도 이동·확대'}</button>
+      <button type="button" onClick={() => { setInteractive(false); if (guide.length > 1 && live) setShowOverview(v => !v); else setCenterRequest(v => v + 1); }} className="py-2">{guide.length > 1 && live ? (showOverview ? '현재 위치로 이동' : '코스 전체 보기') : route.length > 1 && !live ? '전체 경로 보기' : '현재 위치로 이동'}</button>
+      <p role="status" className="w-full text-[11px] text-[#7b8796]">{interactive ? '지도 안에서 이동·확대할 수 있습니다. 화면을 스크롤하려면 조작을 끝내 주세요.' : '지도 위에서도 화면을 위아래로 스크롤할 수 있습니다.'}</p>
+    </div>}
   </div>;
 }

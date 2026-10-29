@@ -9,10 +9,15 @@ import BottomNav, { type TabId } from '../components/BottomNav';
 
 import type { Screen } from '../App';
 import CollapsibleMenuSection from '../components/CollapsibleMenuSection';
+import { openPrivacyPolicy } from '../platform/native';
+import { useBackAction } from '../navigation/useBackAction';
+import { featuredCourse } from '../data/courses';
+import Chatbot from '../components/Chatbot';
 
 interface Props {
   onNavigate: (screen: Screen) => void;
   onStartFreeRun: () => void;
+  onSelectCourse: (id: number) => void;
 }
 
 const logo = brandLogo;
@@ -43,6 +48,7 @@ const menuSections = [
   {
     title: '러닝 & 기록',
     items: [
+      { icon: '📍', label: '러닝 경로 찾기', sub: '출발·도착지로 보행 경로 찾기', screen: 'route-planner' },
       { icon: '🏃', label: '기록 관리', sub: '러닝 타임라인 및 분석', screen: 'records' },
       { icon: '🗺️', label: '코스 탐색', sub: '추천 코스 찾기', screen: 'courses' },
       { icon: '🏅', label: '나의 배지', sub: '획득 배지 및 목표 확인', screen: 'my-badges' },
@@ -61,18 +67,19 @@ const menuSections = [
     items: [
       { icon: '🔔', label: '알림 설정', sub: '푸시 알림 관리', screen: '' },
       { icon: '⚙️', label: '앱 설정', sub: '테마·언어·접근성', screen: '' },
-      { icon: '🔒', label: '개인정보 처리방침', sub: '', screen: '' },
+      { icon: '🔒', label: '개인정보 처리방침', sub: '', screen: 'privacy-policy' },
     ],
   },
 ];
 
-export default function HomeScreen({ onNavigate, onStartFreeRun }: Props) {
+export default function HomeScreen({ onNavigate, onStartFreeRun, onSelectCourse }: Props) {
   const { user, profile, logout } = useAuth();
   const { runs, totalDistanceMeters, badgeCount, loading: activityLoading, error: activityError } = useActivity();
   const freshAccount = profile?.dataVersion === 2;
   const [logoutError, setLogoutError] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  useBackAction(menuOpen, () => setMenuOpen(false));
 
   const handleTabChange = (tab: TabId) => {
     if (tab === 'home') return;
@@ -84,6 +91,7 @@ export default function HomeScreen({ onNavigate, onStartFreeRun }: Props) {
 
   const handleMenuNav = (screen?: string) => {
     setMenuOpen(false);
+    if (screen === 'privacy-policy') { void openPrivacyPolicy(); return; }
     if (screen) onNavigate(screen as Parameters<typeof onNavigate>[0]);
   };
 
@@ -101,7 +109,7 @@ export default function HomeScreen({ onNavigate, onStartFreeRun }: Props) {
           {/* Drawer panel */}
           <div
             className="relative w-[300px] bg-white flex flex-col"
-            style={{ height: 800, boxShadow: '4px 0 24px rgba(0,0,0,0.18)' }}
+            style={{ height: '100%', boxShadow: '4px 0 24px rgba(0,0,0,0.18)' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drawer header / profile — fixed */}
@@ -203,7 +211,7 @@ export default function HomeScreen({ onNavigate, onStartFreeRun }: Props) {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto pb-[72px]">
+      <div className="flex-1 min-h-0 overflow-y-auto pb-[72px]">
         {/* Greeting */}
         <div className="px-4 pt-2 pb-3">
           <p className="text-[18px] text-black" style={{ fontFamily: 'Noto Sans KR', fontWeight: 700 }}>
@@ -214,37 +222,28 @@ export default function HomeScreen({ onNavigate, onStartFreeRun }: Props) {
           </p>
         </div>
 
-        <LocationCard />
-        {/* AI prompt bar */}
-        <div className="px-4 mb-4">
-          <div className="bg-white border border-[#dce3f1] rounded-3xl h-[37px] flex items-center px-4 gap-2">
-            <span className="text-[20px] leading-none opacity-50">🏃</span>
-            <span className="text-[13px] text-[#b4b4b4] flex-1" style={{ fontFamily: 'Noto Sans KR', fontWeight: 500 }}>
-              퇴근 후에 30분 동안 러닝 뛸 만한 코스 추천해줘.
-            </span>
-          </div>
-        </div>
+        <LocationCard onBrowseCourses={() => onNavigate('courses')} />
 
         {/* Today's recommended course */}
         <div className="px-4 mb-3">
           <div className="flex items-center justify-between mb-2">
             <div>
               <p className="text-[14px] text-black" style={{ fontFamily: 'Noto Sans KR', fontWeight: 700 }}>오늘의 추천 코스</p>
-              <p className="text-[12px] text-[#7b8796]" style={{ fontFamily: 'Noto Sans KR', fontWeight: 400 }}>내 위치를 기준으로 코스를 빠르고 쉽게!</p>
+              <p className="text-[12px] text-[#7b8796]" style={{ fontFamily: 'Noto Sans KR', fontWeight: 400 }}>부산의 GPS 안내 코스를 만나보세요.</p>
             </div>
-            <button className="text-[10px] text-[#0570db]" style={{ fontFamily: 'Noto Sans KR', fontWeight: 500 }}>View All</button>
+            <button onClick={() => onNavigate('courses')} className="text-[10px] text-[#0570db]" style={{ fontFamily: 'Noto Sans KR', fontWeight: 500 }}>View All</button>
           </div>
 
           <div className="flex gap-3">
             {/* Today's course card */}
-            <div className="bg-gradient-to-r from-[#fff4d6] via-[#fff9e6] to-[#fffdf5] border border-[#dce3f1] rounded-3xl p-3 flex-1 shadow-sm">
+            <div className="bg-white border border-[#dce3f1] rounded-3xl p-3 flex-1 shadow-sm">
               <p className="text-[9px] text-[#7b8796] mb-1" style={{ fontFamily: 'Noto Sans KR', fontWeight: 700 }}>오늘의 러닝</p>
               <p className="text-[11px] text-black leading-tight" style={{ fontFamily: 'Noto Sans KR', fontWeight: 700 }}>
-                광안리 댕댕<br />RUN
+                {featuredCourse.title}
               </p>
               <button
-                onClick={() => onNavigate('course-detail')}
-                className="mt-2 bg-[#4cb57d] border border-[#4cb57d] text-white text-[11px] rounded-3xl px-3 py-1"
+                onClick={() => onSelectCourse(featuredCourse.id)}
+                className="mt-2 bg-[#d4eee3] border border-[#c0e2d2] text-[#2f6853] text-[11px] rounded-3xl px-3 py-1"
                 style={{ fontFamily: 'Noto Sans KR', fontWeight: 500 }}
               >
                 Start
@@ -252,7 +251,7 @@ export default function HomeScreen({ onNavigate, onStartFreeRun }: Props) {
             </div>
 
             {/* Nearby landmarks card */}
-            <div className="bg-[#fffdf5] border border-[#dce3f1] rounded-3xl p-3 flex-1 shadow-sm">
+            <div className="bg-white border border-[#dce3f1] rounded-3xl p-3 flex-1 shadow-sm">
               <div className="flex flex-col gap-2">
                 <div className="flex items-start gap-1.5">
                   <div className="w-5 h-4 border border-black rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -279,9 +278,11 @@ export default function HomeScreen({ onNavigate, onStartFreeRun }: Props) {
 
         {/* Free running button */}
         <div className="px-4 mb-4">
+          <button type="button" onClick={() => onNavigate('route-planner')}
+            className="mb-2 w-full rounded-3xl bg-[#d4eee3] px-3 py-3 text-[14px] font-bold text-[#2f6853]">📍 출발·도착지로 러닝 경로 찾기</button>
           <button
             onClick={onStartFreeRun}
-            className="w-full h-[47px] bg-[#0570db] rounded-3xl text-white text-[14px] font-bold"
+            className="w-full h-[47px] bg-[#bde3f6] rounded-3xl text-[#285b78] text-[14px] font-bold"
             style={{ fontFamily: 'Noto Sans KR', fontWeight: 700 }}
           >
             자유 러닝 시작하기
@@ -377,6 +378,7 @@ export default function HomeScreen({ onNavigate, onStartFreeRun }: Props) {
       </div>
 
       <BottomNav active="home" onTabChange={handleTabChange} />
+      <Chatbot />
     </div>
   );
 }

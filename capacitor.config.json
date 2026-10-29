@@ -1,0 +1,14 @@
+{
+  "appId": "com.rundy.app",
+  "appName": "뛴데이",
+  "webDir": "dist",
+  "server": { "androidScheme": "https", "hostname": "localhost" },
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false,
+    "adjustMarginsForEdgeToEdge": "auto"
+  },
+  "plugins": {
+    "FirebaseAuthentication": { "skipNativeAuth": true, "providers": ["google.com"] }
+  }
+}

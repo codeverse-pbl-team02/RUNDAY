@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860">
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#426582"/></marker></defs>
+<rect width="1400" height="860" fill="#f5f8fc"/>
+<g font-family="Malgun Gothic, Apple SD Gothic Neo, sans-serif">
+<text x="55" y="65" font-size="30" font-weight="700" fill="#102d49">뛴데이 · 백엔드 아키텍처</text>
+<text x="55" y="101" font-size="18" fill="#526980">인증·DB·권한 판정은 Firebase / GPS 측정·계산은 기기 내부</text>
+<rect x="520" y="145" width="820" height="440" rx="24" fill="#edf3ff" stroke="#c4d6f2" stroke-width="2"/>
+<text x="550" y="181" font-size="21" font-weight="700" fill="#2357a3">관리형 백엔드 · Firebase</text>
+<rect x="55" y="220" width="345" height="325" rx="22" fill="white" stroke="#9db6d0" stroke-width="2"/>
+<text x="83" y="260" font-size="23" font-weight="700" fill="#102d49">앱 클라이언트</text>
+<g font-size="19" fill="#344d65"><text x="83" y="302">React 웹 / Capacitor Android</text><text x="83" y="345">· 로그인 / 프로필 / 기록 화면</text><text x="83" y="383">· GPS 필터·거리·페이스 계산</text><text x="83" y="421">· 종료 후 사용자가 기록 저장</text><text x="83" y="459">· SDK로 DB 변경 구독</text><text x="83" y="507" font-size="16">코스 원본: 앱에 포함된 JSON</text></g>
+<rect x="555" y="215" width="735" height="110" rx="16" fill="white" stroke="#9cb8df"/>
+<text x="580" y="253" font-size="23" font-weight="700" fill="#2357a3">Firebase Authentication</text>
+<text x="580" y="288" font-size="19" fill="#344d65">이메일·Google 로그인 → UID·인증 세션 / 재인증·계정 삭제</text>
+<rect x="555" y="390" width="275" height="155" rx="16" fill="white" stroke="#9cb8df"/>
+<text x="577" y="430" font-size="22" font-weight="700" fill="#2357a3">Security Rules</text>
+<text x="577" y="467" font-size="18" fill="#344d65">UID 소유권 / 필드·범위</text><text x="577" y="503" font-size="18" fill="#344d65">재인증 / 탈퇴 중 쓰기 차단</text>
+<rect x="900" y="390" width="390" height="155" rx="16" fill="white" stroke="#9cb8df"/>
+<text x="925" y="430" font-size="23" font-weight="700" fill="#2357a3">Cloud Firestore</text>
+<text x="925" y="468" font-size="19" fill="#344d65">rundayUsers/{uid}</text><text x="925" y="504" font-size="19" fill="#344d65">└ runs/{runId} · 개인별 기록</text>
+<g stroke="#426582" stroke-width="2.5" fill="none" marker-end="url(#arrow)"><path d="M400 270 L550 270"/><path d="M400 470 L550 470"/><path d="M830 470 L895 470"/><path d="M690 325 L690 385"/></g>
+<g font-size="16" fill="#344d65"><text x="421" y="249">로그인 요청</text><text x="416" y="446">인증된 읽기·쓰기</text><text x="711" y="358">인증 정보로 권한 판정</text></g>
+<rect x="55" y="640" width="570" height="145" rx="20" fill="white" stroke="#b7d3c5" stroke-width="2"/>
+<text x="80" y="679" font-size="22" font-weight="700" fill="#24654c">기기 API · GPS / 네이티브 Google 인증</text>
+<text x="80" y="717" font-size="18" fill="#344d65">Capacitor Geolocation / 웹 Geolocation</text><text x="80" y="751" font-size="18" fill="#344d65">사진은 기기 내 선택·미리보기, 서버 업로드 미연결</text>
+<rect x="710" y="640" width="630" height="145" rx="20" fill="white" stroke="#b7d3c5" stroke-width="2"/>
+<text x="735" y="679" font-size="22" font-weight="700" fill="#24654c">외부 서비스 · Kakao Maps JavaScript SDK</text>
+<text x="735" y="717" font-size="18" fill="#344d65">지도 / 마커 / 경로 표시 / 좌표 → 주소 변환</text><text x="735" y="751" font-size="18" fill="#344d65">클라이언트에서 직접 연동 · 길찾기 서버 아님</text>
+<g stroke="#426582" stroke-width="2.5" fill="none" marker-end="url(#arrow)"><path d="M230 640 L230 550"/><path d="M1025 640 L1025 610 L375 610 L375 550"/></g>
+<text x="55" y="828" font-size="16" fill="#526980">UID로 연결된 관리형 백엔드 구조 · 별도 REST 서버 및 현재 실행 중인 Cloud Functions 없음 · 2026-10-23 소스 기준</text>
+</g></svg>

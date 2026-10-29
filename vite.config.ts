@@ -30,6 +30,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      proxy: { '/api/walking-route': 'http://127.0.0.1:8787', '/api/chat': 'http://127.0.0.1:8787' },
       host: process.env.FIGMA_DEV_SERVER_HOST || '0.0.0.0',
       port: parseInt(process.env.PORT || '8443'),
       strictPort: true,

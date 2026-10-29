@@ -46,10 +46,23 @@ body {
 }
 
 #root {
-  width: 360px;
+  width: min(360px, 100%);
   height: 800px;
+  height: min(800px, 100dvh);
   overflow: hidden;
   position: relative;
+}
+
+body.native-app {
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body.native-app #root {
+  width: 100%;
+  height: 100%;
 }
 
 /* Thin scrollbar — all scrollable elements */

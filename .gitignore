@@ -43,6 +43,8 @@ credentials.json
 *.pfx
 *.jks
 *.keystore
+android/key.properties
+android/app/google-services.json
 id_rsa*
 id_ed25519*
 .npmrc

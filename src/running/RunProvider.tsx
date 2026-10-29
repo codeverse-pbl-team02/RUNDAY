@@ -3,10 +3,15 @@ import { doc, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { getFirebase } from '../lib/firebase';
 import { useAuth } from '../auth/AuthProvider';
 import { authError } from '../auth/errors';
+import { getCurrentLocation, locationAvailable, watchLocation, type LocationError } from '../platform/location';
+import { App as NativeApp } from '@capacitor/app';
+import { isNative } from '../platform/native';
+import { getCourseGuide } from './courseGuide';
+import { validPlannedRoute, type PlannedRoute } from '../routing/types';
 
 export interface Point { latitude: number; longitude: number; timestamp: number; segment: number }
 type Mode = 'idle' | 'locating' | 'running' | 'paused' | 'finished';
-interface Session { id: string; startedAt: number; distance: number; elapsed: number; points: Point[]; segment: number; courseId?: number }
+interface Session { id: string; startedAt: number; distance: number; elapsed: number; points: Point[]; segment: number; courseId?: number; plannedRoute?: PlannedRoute }
 export function distanceMeters(a: Point, b: Point) {
   const rad = Math.PI / 180;
   const dLat = (b.latitude - a.latitude) * rad;
@@ -23,7 +28,7 @@ export function paceText(meters: number, seconds: number) {
   const pace = Math.round(seconds / (meters / 1000));
   return `${Math.floor(pace / 60)}′${(pace % 60).toString().padStart(2, '0')}″`;
 }
-function geoError(error: GeolocationPositionError) {
+function geoError(error: LocationError) {
   if (error.code === 1) return '위치 권한이 차단되었습니다. 브라우저의 사이트 설정에서 위치를 허용해 주세요.';
   if (error.code === 3) return '위치를 찾는 데 시간이 걸립니다. 실외에서 다시 시도해 주세요.';
   return '위치를 확인할 수 없습니다. 기기의 위치 서비스를 켜고 다시 시도해 주세요.';
@@ -32,8 +37,9 @@ const emptySession = (): Session => ({ id: '', startedAt: 0, distance: 0, elapse
 interface RunContextValue {
   mode: Mode; session: Session; elapsed: number; message: string; accuracy: number | null;
   current: Point | null; locating: boolean; saving: boolean; saved: boolean;
-  locate: () => void; start: (courseId?: number) => void; pause: () => void; resume: () => void;
-  finish: () => void; save: () => Promise<void>; reset: () => void;
+  locationError: string | null;
+  locate: () => void; start: (courseId?: number) => boolean; startRoute: (route: PlannedRoute) => boolean; pause: () => void; resume: () => void;
+  finish: () => void; save: () => Promise<boolean>; reset: () => void;
 }
 const RunContext = createContext<RunContextValue | null>(null);
 export function RunProvider({ children }: { children: ReactNode }) {
@@ -46,10 +52,11 @@ export function RunProvider({ children }: { children: ReactNode }) {
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [message, setMessage] = useState('');
   const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [, tick] = useState(0);
-  const watch = useRef<number | null>(null);
+  const watch = useRef<(() => void) | null>(null);
   const generation = useRef(0);
   const locationGeneration = useRef(0);
   const saveLock = useRef(false);
@@ -58,7 +65,7 @@ export function RunProvider({ children }: { children: ReactNode }) {
   function publish() { setSession({ ...sessionRef.current, points: [...sessionRef.current.points] }); }
   function stopWatch() {
     generation.current++;
-    if (watch.current !== null) navigator.geolocation.clearWatch(watch.current);
+    watch.current?.();
     watch.current = null;
   }
   function elapsedNow() {
@@ -89,45 +96,54 @@ export function RunProvider({ children }: { children: ReactNode }) {
     };
     document.addEventListener('visibilitychange', hidden);
     window.addEventListener('beforeunload', beforeUnload);
+    let disposed = false;
+    let removeNativeListener: (() => void) | undefined;
+    if (isNative) void NativeApp.addListener('appStateChange', ({ isActive }) => {
+      if (!isActive && ['running', 'locating'].includes(modeRef.current)) {
+        pause(); setMessage('다른 화면으로 이동해 일시정지했습니다. 이어 달리기를 눌러 주세요.');
+      }
+    }).then(listener => { if (disposed) void listener.remove(); else removeNativeListener = () => { void listener.remove(); }; });
     return () => {
+      disposed = true; removeNativeListener?.();
       clearInterval(timer); stopWatch(); locationGeneration.current++;
       document.removeEventListener('visibilitychange', hidden);
       window.removeEventListener('beforeunload', beforeUnload);
     };
   }, []);
   function available() {
-    if (!window.isSecureContext) { setMessage('위치 기능은 HTTPS 주소에서 사용할 수 있습니다.'); return false; }
-    if (!navigator.geolocation) { setMessage('이 브라우저는 위치 기능을 지원하지 않습니다.'); return false; }
+    if (!window.isSecureContext) { const error = '위치 기능은 HTTPS 주소에서 사용할 수 있습니다.'; setLocationError(error); setMessage(error); return false; }
+    if (!locationAvailable()) { const error = '이 기기는 위치 기능을 지원하지 않습니다.'; setLocationError(error); setMessage(error); return false; }
     return true;
   }
   function locate() {
     if (locating || !available()) return;
-    setLocating(true); setMessage('');
+    setLocating(true); setLocationError(null); setMessage('');
     const version = ++locationGeneration.current;
-    navigator.geolocation.getCurrentPosition(position => {
+    getCurrentLocation(position => {
       if (version !== locationGeneration.current) return;
       setCurrent({ latitude: position.coords.latitude, longitude: position.coords.longitude, timestamp: position.timestamp, segment: 0 });
       setAccuracy(position.coords.accuracy); setLocating(false);
     }, error => {
       if (version !== locationGeneration.current) return;
-      setMessage(geoError(error)); setLocating(false);
+      setLocationError(geoError(error)); setMessage(geoError(error)); setLocating(false);
     }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
   }
   function watchPosition() {
     if (!available()) return;
-    stopWatch(); setStatus('locating'); setMessage('GPS 신호를 찾고 있습니다.');
+    stopWatch(); setStatus('locating'); setLocationError(null); setMessage('GPS 신호를 찾고 있습니다.');
     const version = generation.current;
     let previous: Point | null = null;
-    watch.current = navigator.geolocation.watchPosition(position => {
+    watch.current = watchLocation(position => {
       if (version !== generation.current) return;
       const { latitude, longitude, accuracy: acc } = position.coords;
       if (![latitude, longitude, acc, position.timestamp].every(Number.isFinite)
         || Math.abs(latitude) > 90 || Math.abs(longitude) > 180 || acc < 0
         || Date.now() - position.timestamp > 30000 || position.timestamp > Date.now() + 5000) return;
       setAccuracy(acc);
-      if (acc > 50) { setMessage('GPS 정확도가 낮습니다. 탁 트인 실외에서 기다려 주세요.'); return; }
+      if (acc > 50) { const error = 'GPS 정확도가 낮습니다. 탁 트인 실외에서 기다려 주세요.'; setLocationError(error); setMessage(error); return; }
       const point: Point = { latitude, longitude, timestamp: position.timestamp, segment: sessionRef.current.segment };
       setCurrent(point);
+      setLocationError(null);
       if (modeRef.current === 'locating') {
         if (!sessionRef.current.startedAt) sessionRef.current.startedAt = Date.now();
         activeSince.current = performance.now(); setStatus('running');
@@ -152,13 +168,26 @@ export function RunProvider({ children }: { children: ReactNode }) {
       }
     }, error => {
       if (version !== generation.current) return;
-      pause(); setMessage(geoError(error));
+      pause(); setLocationError(geoError(error)); setMessage(geoError(error));
     }, { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
   }
-  function start(courseId?: number) {
-    if (modeRef.current !== 'idle' && !(modeRef.current === 'finished' && saved)) return;
-    sessionRef.current = { ...emptySession(), id: crypto.randomUUID(), ...(courseId === undefined ? {} : { courseId }) };
+  function begin(courseId?: number, plannedRoute?: PlannedRoute) {
+    if (modeRef.current !== 'idle' && !(modeRef.current === 'finished' && saved)) return false;
+    if (courseId !== undefined && !getCourseGuide(courseId)) {
+      setMessage('이 코스의 GPS 경로는 준비 중입니다. 다른 코스를 선택해 주세요.');
+      return false;
+    }
+    if (!available()) return false;
+    locationGeneration.current++; setLocating(false);
+    sessionRef.current = { ...emptySession(), id: crypto.randomUUID(), ...(courseId === undefined ? {} : { courseId }),
+      ...(plannedRoute ? { plannedRoute } : {}) };
     setCurrent(null); setAccuracy(null); setSaved(false); publish(); watchPosition();
+    return true;
+  }
+  function start(courseId?: number) { return begin(courseId); }
+  function startRoute(route: PlannedRoute) {
+    if (!validPlannedRoute(route)) { setMessage('선택한 경로를 확인하지 못했습니다. 경로를 다시 조회해 주세요.'); return false; }
+    return begin(undefined, route);
   }
   function resume() {
     if (modeRef.current !== 'paused' || sessionRef.current.points.length >= 3000 || elapsedNow() >= 86400) return;
@@ -171,7 +200,7 @@ export function RunProvider({ children }: { children: ReactNode }) {
     setStatus('finished'); setMessage('종료했습니다. 저장 버튼을 눌러 기록을 보관하세요.');
   }
   async function save() {
-    if (saveLock.current || saved || modeRef.current !== 'finished' || !user) return;
+    if (saveLock.current || saved || modeRef.current !== 'finished' || !user) return false;
     saveLock.current = true; setSaving(true); setMessage('');
     try {
       const data = sessionRef.current;
@@ -185,7 +214,8 @@ export function RunProvider({ children }: { children: ReactNode }) {
       setSaved(true); setMessage('러닝 기록을 저장했습니다.');
       // The session stays visible, but no longer needs a page-leave warning.
       sessionRef.current = { ...data, startedAt: 0 };
-    } catch (error) { setMessage(authError(error)); }
+      return true;
+    } catch (error) { setMessage(authError(error)); return false; }
     finally { saveLock.current = false; setSaving(false); }
   }
   function reset() {
@@ -193,7 +223,7 @@ export function RunProvider({ children }: { children: ReactNode }) {
     stopWatch(); activeSince.current = null; sessionRef.current = emptySession();
     publish(); setStatus('idle'); setSaved(false); setMessage('');
   }
-  return <RunContext.Provider value={{ mode, session, elapsed: elapsedNow(), message, accuracy, current, locating, saving, saved, locate, start, pause, resume, finish, save, reset }}>{children}</RunContext.Provider>;
+  return <RunContext.Provider value={{ mode, session, elapsed: elapsedNow(), message, accuracy, current, locating, locationError, saving, saved, locate, start, startRoute, pause, resume, finish, save, reset }}>{children}</RunContext.Provider>;
 }
 export function useRun() {
   const context = useContext(RunContext);

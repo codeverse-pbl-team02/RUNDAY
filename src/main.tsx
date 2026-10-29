@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import { AuthProvider } from './auth/AuthProvider'
 import './index.css'
+import { isNative } from './platform/native'
+
+if (isNative) document.body.classList.add('native-app')
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

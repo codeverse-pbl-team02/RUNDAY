@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { authError } from '../auth/errors';
 import { firebaseConfigured } from '../lib/firebase';
+import { openPrivacyPolicy } from '../platform/native';
 
 const logo = brandLogo;
 const eyeIcon = '/assets/18cb3.svg';
@@ -158,6 +159,7 @@ export default function LoginScreen() {
       </div>
       <div className="mt-auto shrink-0 py-4 text-center">
         <p className="text-[12px] text-[#aaa]">지구와 함께 달리는 러닝앱, 뛴데이 🌍</p>
+        <button type="button" onClick={() => void openPrivacyPolicy()} className="mt-2 text-[11px] text-[#7b8796] underline underline-offset-2">개인정보처리방침 및 계정 삭제 안내</button>
       </div>
     </div>
   );

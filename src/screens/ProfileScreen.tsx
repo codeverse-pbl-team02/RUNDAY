@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { useActivity } from '../running/ActivityProvider';
 import AccountSettings, { ProfileEditor } from '../components/AccountSettings';
 import type { Screen } from '../App';
+import { openPrivacyPolicy } from '../platform/native';
 
 interface Props {
   onNavigate: (screen: Screen) => void;
@@ -111,7 +112,7 @@ export default function ProfileScreen({ onNavigate }: Props) {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto pb-6">
+      <div className="flex-1 min-h-0 overflow-y-auto pb-6">
         {/* 기본 정보 */}
         <div className="pt-5">
           <p className="text-[11px] font-black text-[#94afc8] tracking-[0.55px] px-5 mb-1.5">기본 정보</p>
@@ -147,7 +148,7 @@ export default function ProfileScreen({ onNavigate }: Props) {
         <div className="pt-5">
           <p className="text-[11px] font-black text-[#94afc8] tracking-[0.55px] px-5 mb-1.5">연결된 서비스</p>
           <div className="mx-4 bg-white border border-[#d6e9f8] rounded-[24px] overflow-hidden">
-            <Row icon="⌚" label="Apple Watch" value={freshAccount ? '연결 안 됨' : '연결됨'} />
+            <Row icon="⌚" label="스마트워치" value="연동 준비 중" chevron={false} />
             <Row icon="📱" label="건강 앱" value={freshAccount ? '연결 안 됨' : '동기화 중'} />
             <Row icon="🗺️" label="Strava" value="연결 안 됨" />
           </div>
@@ -161,7 +162,7 @@ export default function ProfileScreen({ onNavigate }: Props) {
           </div>
         </div>
 
-        <p className="text-[10px] text-[#94afc8] text-center mt-5 mb-2">뛴DAY v1.0.0 · 이용약관 · 개인정보처리방침</p>
+        <p className="text-[10px] text-[#94afc8] text-center mt-5 mb-2">뛴DAY v1.0.0 · 이용약관 · <button type="button" className="underline underline-offset-2" onClick={() => void openPrivacyPolicy()}>개인정보처리방침</button></p>
       </div>
     </div>
   );
