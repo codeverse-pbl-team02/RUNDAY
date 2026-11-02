@@ -1,4 +1,6 @@
-import { brandLogo } from '../lib/assets';
+import AppPageHeader from '../components/AppPageHeader';
+import BottomNav from '../components/BottomNav';
+import MonthlyRunSummary from '../running/MonthlyRunSummary';
 import { useAuth } from '../auth/AuthProvider';
 import type { Screen } from '../App';
 
@@ -22,95 +24,36 @@ const LIST = [
 ];
 
 export default function RankingScreen({ onNavigate }: Props) {
-  const { profile } = useAuth();
-  if (profile?.dataVersion === 2) return <div className="flex flex-col h-full bg-[#edf4fb]">
-    <div className="h-14 px-4 flex items-center gap-3">
-      <button onClick={() => onNavigate('home')} className="text-[#0570db] p-2" aria-label="홈으로">‹</button>
-      <h1 className="font-bold text-[18px]">러닝 랭킹</h1>
-    </div>
+  const { profile, user } = useAuth();
+  const nickname = profile?.displayName || user?.displayName || '러너';
+  if (profile?.dataVersion === 2) return <div className="relative flex flex-col h-full bg-[#edf4fb]">
+    <AppPageHeader onBack={() => onNavigate('home')} />
+    <div className="flex-1 min-h-0 overflow-y-auto pb-[76px]">
+    <h1 className="px-4 pt-2 font-bold text-[18px]">러닝 랭킹</h1>
+    <div className="mt-3"><MonthlyRunSummary /></div>
     <div className="mx-4 mt-4 bg-white border border-[#dce3f1] rounded-3xl p-5">
       <p className="font-bold text-[#0d1b2e]">아직 참여한 랭킹이 없습니다.</p>
       <p className="mt-2 text-[12px] text-[#7b8796]">내 기록은 GPS 러닝 기록에서 확인할 수 있습니다.</p>
-      <button onClick={() => onNavigate('records')} className="mt-4 rounded-full bg-[#0570db] text-white text-[13px] font-bold px-4 py-2">내 기록 보기</button>
+      <button onClick={() => onNavigate('records')} className="mt-4 rounded-full bg-[#bde3f6] text-[#285b78] text-[13px] font-bold px-4 py-2">내 기록 보기</button>
     </div>
+    </div>
+    <BottomNav active="records" onTabChange={tab => onNavigate(tab)} />
   </div>;
   return (
-    <div className="flex flex-col h-full bg-[#edf4fb]">
-      {/* Header */}
-      <div className="bg-[#edf4fb] flex h-[56px] items-center px-3 shrink-0 w-full">
-        <img src={brandLogo} alt="뛴데이" className="h-[48px] w-[112px] object-contain" />
-        <div className="flex-1" />
-        <button className="size-[20px] overflow-clip relative shrink-0">
-          <img src="/assets/1c57a.svg" alt="" className="absolute inset-0 size-full" />
-        </button>
-      </div>
-
-      {/* Back + title */}
-      <div className="flex items-center px-2 pb-2 pt-1 shrink-0">
-        <button onClick={() => onNavigate('home')} className="size-6 flex items-center justify-center mr-1">
-          <img src="/assets/3b466.svg" alt="back" className="size-full" />
-        </button>
-      </div>
+    <div className="relative flex flex-col h-full bg-[#edf4fb]">
+      <AppPageHeader onBack={() => onNavigate('home')} />
       <div className="px-5 pb-4 shrink-0">
-        <p className="font-bold text-[14px] text-black leading-6">열심히 달려온</p>
-        <p className="font-bold text-[14px] text-black leading-6">부기 님의 기록을 분석해볼까요?</p>
+        <p className="flex min-w-0 whitespace-nowrap text-[14px] font-bold leading-6 text-black" title={`열심히 달려온 ${nickname}님의 기록을 분석해볼까요?`}>
+          <span className="shrink-0">열심히 달려온&nbsp;</span><span className="min-w-0 truncate">{nickname}</span><span className="shrink-0">님의 기록을 분석해볼까요?</span>
+        </p>
       </div>
 
       {/* Scrollable */}
-      <div className="flex-1 overflow-y-auto pb-4">
-        {/* Stats summary card */}
-        <div className="mx-4 bg-white rounded-[24px] px-5 py-4 mb-3">
-          <div className="flex items-center justify-between mb-3">
-            <p className="font-bold text-[16px] text-black">7월 누적 기록</p>
-          </div>
-          <div className="flex gap-3 items-start">
-            <div className="flex-1">
-              <p className="text-[11px] text-[#4a6080]">
-                이달의 러닝 <span className="text-[#f97316]">🔥 24일간 연속 운동 중</span>
-              </p>
-              <div className="relative h-[33px] my-2">
-                <p className="absolute font-extrabold text-[32px] text-[#0d1b2e] leading-none left-0 top-0"
-                  style={{ fontFamily: 'Outfit' }}>124.6</p>
-                <p className="absolute text-[14px] text-[#94afc8] leading-none"
-                  style={{ fontFamily: 'Outfit', left: 82, top: 13 }}>km</p>
-              </div>
-              <div className="bg-[#d6e9f8] inline-flex items-center px-2.5 py-0.5 rounded-full">
-                <p className="text-[11px] text-[#0570db]">📈 월간 목표 83% 달성</p>
-              </div>
-            </div>
-            {/* Donut placeholder */}
-            <div className="relative w-[104px] h-[104px] shrink-0">
-              <img src="/assets/5d5f9.svg" alt="" className="absolute inset-0 size-full" />
-              <img src="/assets/315f1.svg" alt="" className="absolute w-[67.6px] h-[83px]" style={{ left: 26, top: 9.35 }} />
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <p className="font-bold text-[11px] text-[#0d1b2e]">전체</p>
-                <p className="font-bold text-[20px] text-[#0d1b2e] leading-none">124.6</p>
-                <p className="text-[9px] text-[#94afc8]">/ 150 km</p>
-              </div>
-            </div>
-          </div>
-          {/* Mini stat pills */}
-          <div className="flex gap-2 mt-4">
-            {[
-              { icon: '📍', label: '총 누적거리', val: '124.6', unit: 'km' },
-              { icon: '🏃', label: '러닝 횟수', val: '38', unit: '회' },
-              { icon: '🔥', label: '소모 칼로리', val: '8,420', unit: 'kcal' },
-            ].map((s) => (
-              <div key={s.label} className="flex-1 border border-black rounded-[16px] px-1.5 py-2">
-                <div className="flex items-center justify-center gap-0.5 mb-1">
-                  <span className="text-[10px]">{s.icon}</span>
-                  <p className="font-bold text-[10px] text-black">{s.label}</p>
-                </div>
-                <p className="font-bold text-[12px] text-black text-center">
-                  {s.val}<span className="font-normal text-[9px] text-[#94afc8] ml-0.5">{s.unit}</span>
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="flex-1 min-h-0 overflow-y-auto pb-[76px]">
+        <MonthlyRunSummary />
 
         {/* Ranking header */}
-        <div className="flex items-center justify-between px-4 mb-3">
+        <div className="flex items-center justify-between px-4 pt-3 mb-1">
           <p className="font-bold text-[14px] text-[#7b8796]">월간 누적 거리 랭킹</p>
           <button>
             <p className="text-[12px] text-[#60aedd]">챌린지 규칙</p>
@@ -118,15 +61,15 @@ export default function RankingScreen({ onNavigate }: Props) {
         </div>
 
         {/* Podium */}
-        <div className="flex gap-2 items-end justify-center px-4 mb-4" style={{ height: 215 }}>
+        <div className="grid grid-cols-3 gap-2 items-end px-4 mb-4" style={{ height: 208 }}>
           {TOP3.map((p) => (
-            <div key={p.rank} className="flex-1 flex flex-col items-center">
+            <div key={p.rank} className="min-w-0 flex flex-col items-center">
               {/* Badge label */}
               <div
                 className="rounded-full px-2 py-0.5 mb-1"
-                style={{ background: p.isFirst ? '#000' : '#f8f9fa', boxShadow: '0px 1px 1px rgba(0,0,0,0.1)' }}
+                style={{ background: p.isFirst ? '#d4eee3' : '#e1f1fa' }}
               >
-                <p className={`font-black text-[10px] ${p.isFirst ? 'text-white' : 'text-black'}`}>{p.badge}</p>
+                <p className={`font-bold text-[10px] ${p.isFirst ? 'text-[#2f6853]' : 'text-[#285b78]'}`}>{p.badge}</p>
               </div>
               {/* Card */}
               <div
@@ -134,10 +77,8 @@ export default function RankingScreen({ onNavigate }: Props) {
                 style={{
                   height: p.isFirst ? 176 : 160,
                   background: '#fff',
-                  border: p.isFirst ? '1.6px solid black' : '0.8px solid black',
-                  boxShadow: p.isFirst
-                    ? '0px 2px 2px rgba(0,0,0,0.1), 0px 4px 3px rgba(0,0,0,0.1)'
-                    : '0px 1px 1px rgba(0,0,0,0.1)',
+                  border: p.isFirst ? '1px solid #c0e2d2' : '1px solid #dce3f1',
+                  boxShadow: '0 2px 8px rgba(40,91,120,0.05)',
                 }}
               >
                 <div
@@ -145,8 +86,8 @@ export default function RankingScreen({ onNavigate }: Props) {
                   style={{
                     width: p.isFirst ? 64 : 56,
                     height: p.isFirst ? 64 : 56,
-                    background: '#f9fafb',
-                    border: p.isFirst ? '1.6px solid black' : undefined,
+                    background: p.isFirst ? '#e1f1e7' : '#edf4fb',
+                    border: '1px solid #dce3f1',
                   }}
                 >
                   <span style={{ fontSize: p.isFirst ? 36 : 30 }}>{p.emoji}</span>
@@ -155,8 +96,8 @@ export default function RankingScreen({ onNavigate }: Props) {
                 <p className="font-bold text-[14px] text-[#60aedd]" style={{ fontFamily: 'Consolas, monospace' }}>
                   {p.km}<span className="font-normal text-[11px] text-[#7b8796] ml-0.5">km</span>
                 </p>
-                <div className="bg-[#f8f9fa] rounded-full px-2 py-0.5" style={{ boxShadow: '0px 1px 0.5px rgba(0,0,0,0.05)' }}>
-                  <p className="font-bold text-[10px] text-black">{p.streak}</p>
+                <div className="bg-[#edf4fb] rounded-full px-2 py-0.5">
+                  <p className="font-medium text-[10px] text-[#61758c]">{p.streak}</p>
                 </div>
               </div>
             </div>
@@ -168,8 +109,7 @@ export default function RankingScreen({ onNavigate }: Props) {
           {LIST.map((item) => (
             <div
               key={item.rank}
-              className="bg-white border border-black rounded-[24px] flex gap-3 items-center px-4 py-3"
-              style={{ boxShadow: '0px 1px 1px rgba(0,0,0,0.05)' }}
+              className="bg-white border border-[#dce3f1] rounded-[24px] flex gap-3 items-center px-4 py-3 shadow-sm"
             >
               <div className="flex flex-col items-center w-8 shrink-0">
                 <p className="font-bold text-[14px] text-black" style={{ fontFamily: 'Consolas, monospace' }}>{item.rank}</p>
@@ -189,15 +129,14 @@ export default function RankingScreen({ onNavigate }: Props) {
         </div>
 
         {/* My rank sticky card */}
-        <div className="mx-4 bg-white/0 border-[1.6px] border-black rounded-[24px] flex gap-3 items-center px-4 py-3"
-          style={{ boxShadow: '0px 1px 2px rgba(0,0,0,0.1)' }}>
+        <div className="mx-4 bg-white border border-[#bde3f6] rounded-[24px] flex gap-3 items-center px-4 py-3 shadow-sm">
           <div className="flex flex-col items-center w-8 shrink-0">
             <p className="font-bold text-[14px] text-[#60aedd]" style={{ fontFamily: 'Consolas, monospace' }}>24</p>
-            <div className="bg-[#60aedd] rounded-full px-1.5 py-0.5">
-              <p className="font-bold text-[9px] text-white">내 순위</p>
+            <div className="bg-[#bde3f6] rounded-full px-1.5 py-0.5">
+              <p className="font-bold text-[9px] text-[#285b78]">내 순위</p>
             </div>
           </div>
-          <div className="w-10 h-10 rounded-full bg-white border border-black flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-full bg-[#edf4fb] border border-[#dce3f1] flex items-center justify-center shrink-0">
             <span className="text-[20px]">🐕</span>
           </div>
           <div className="flex-1">
@@ -209,16 +148,15 @@ export default function RankingScreen({ onNavigate }: Props) {
 
         {/* Action buttons */}
         <div className="flex gap-2 px-4 mt-4">
-          <button className="flex-1 h-[48px] bg-white rounded-[24px] flex items-center justify-center"
-            style={{ boxShadow: '0px 1px 1.5px rgba(0,0,0,0.12)' }}>
-            <p className="font-bold text-[14px] text-black">공유하기</p>
+          <button className="flex-1 h-[48px] bg-white border border-[#dce3f1] rounded-[24px] flex items-center justify-center">
+            <p className="font-bold text-[14px] text-[#285b78]">공유하기</p>
           </button>
-          <button className="flex-1 h-[48px] bg-white rounded-[24px] flex items-center justify-center"
-            style={{ boxShadow: '0px 2px 3px rgba(0,0,0,0.12)' }}>
-            <p className="font-bold text-[14px] text-black">1위 코스 따라뛰기</p>
+          <button className="flex-1 h-[48px] bg-[#bde3f6] rounded-[24px] flex items-center justify-center">
+            <p className="font-bold text-[14px] text-[#285b78]">1위 코스 따라뛰기</p>
           </button>
         </div>
       </div>
+      <BottomNav active="records" onTabChange={tab => onNavigate(tab)} />
     </div>
   );
 }

@@ -1,4 +1,5 @@
-import { brandLogo } from '../lib/assets';
+import AppPageHeader from '../components/AppPageHeader';
+import BottomNav from '../components/BottomNav';
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { useActivity } from '../running/ActivityProvider';
@@ -25,38 +26,26 @@ const BADGES = [
 ];
 
 export default function MyBadgesScreen({ onNavigate }: Props) {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
+  const nickname = profile?.displayName || user?.displayName || '러너';
   const { totalDistanceMeters, longestStreak, badgeCount } = useActivity();
   const freshAccount = profile?.dataVersion === 2;
   const distanceKm = totalDistanceMeters / 1000;
   const [activeFilter, setActiveFilter] = useState('전체');
 
   return (
-    <div className="flex flex-col h-full bg-[#edf4fb]">
-      {/* Header */}
-      <div className="bg-[#edf4fb] flex h-[56px] items-center px-3 shrink-0 w-full">
-        <img src={brandLogo} alt="뛴데이" className="h-[48px] w-[112px] object-contain" />
-        <div className="flex-1" />
-        <button className="size-[20px] overflow-clip relative shrink-0">
-          <img src="/assets/1c57a.svg" alt="" className="absolute inset-0 size-full" />
-        </button>
-      </div>
-
-      {/* Back + title */}
-      <div className="flex items-center px-2 pb-2 pt-1 shrink-0">
-        <button onClick={() => onNavigate('home')} className="size-6 flex items-center justify-center mr-1">
-          <img src="/assets/3b466.svg" alt="back" className="size-full" />
-        </button>
-      </div>
+    <div className="relative flex flex-col h-full bg-[#edf4fb]">
+      <AppPageHeader onBack={() => onNavigate('home')} />
       <div className="px-5 pb-4 shrink-0">
-        <p className="font-bold text-[14px] text-black leading-6">열심히 달려온</p>
-        <p className="font-bold text-[14px] text-black leading-6">{freshAccount ? `${profile?.displayName || '러너'} 님의 배지를 모아볼까요?` : '부기 님의 기록을 분석해볼까요?'}</p>
+        <p className="flex min-w-0 whitespace-nowrap text-[14px] font-bold leading-6 text-black" title={`열심히 달려온 ${nickname}님의 ${freshAccount ? '배지를 모아볼까요?' : '기록을 분석해볼까요?'}`}>
+          <span className="shrink-0">열심히 달려온&nbsp;</span><span className="min-w-0 truncate">{nickname}</span><span className="shrink-0">님의 {freshAccount ? '배지를 모아볼까요?' : '기록을 분석해볼까요?'}</span>
+        </p>
       </div>
 
       {/* Scrollable */}
-      <div className="flex-1 overflow-y-auto pb-4">
+      <div className="flex-1 min-h-0 overflow-y-auto pb-[76px]">
         {/* Stats summary card */}
-        <div className="mx-4 bg-white rounded-[24px] px-5 py-4 mb-3">
+        <div className="mx-4 bg-white border border-[#dce3f1] rounded-[24px] px-5 py-4 mb-3 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-[11px] text-[#94afc8]">획득한 배지</p>
@@ -67,17 +56,17 @@ export default function MyBadgesScreen({ onNavigate }: Props) {
             </div>
             <div
               className="flex flex-col items-center px-4 py-2 rounded-[16px]"
-              style={{ background: 'linear-gradient(146deg, #43e97b 0%, #38f9d7 100%)' }}
+              style={{ background: '#d4eee3' }}
             >
               <span className="text-[24px] leading-none mb-1">🌳</span>
-              <p className="font-black text-[10px] text-white">{freshAccount ? `획득 ${badgeCount}개` : '이번 달 +2개'}</p>
+              <p className="font-bold text-[10px] text-[#2f6853]">{freshAccount ? `획득 ${badgeCount}개` : '이번 달 +2개'}</p>
             </div>
           </div>
 
           {/* Progress bar */}
           <div className="flex items-center gap-2 mb-3">
             <div className="flex-1 h-[8px] bg-[#d6e9f8] rounded-full overflow-hidden">
-              <div className="h-full bg-[#0570db] rounded-full" style={{ width: freshAccount ? `${Math.round(badgeCount / BADGES.length * 100)}%` : '59%' }} />
+              <div className="h-full bg-[#8bc6e4] rounded-full" style={{ width: freshAccount ? `${Math.round(badgeCount / BADGES.length * 100)}%` : '59%' }} />
             </div>
             <p className="font-bold text-[11px] text-[#0570db]">{freshAccount ? `${Math.round(badgeCount / BADGES.length * 100)}%` : '59%'}</p>
           </div>
@@ -103,14 +92,14 @@ export default function MyBadgesScreen({ onNavigate }: Props) {
         </div>
 
         {/* Filter pills */}
-        <div className="flex gap-1.5 px-4 pb-3 overflow-x-auto">
+        <div className="flex gap-[7px] px-4 pb-3 overflow-x-auto">
           {BADGE_FILTERS.map((f) => (
             <button
               key={f}
               onClick={() => setActiveFilter(f)}
               className={`flex items-center justify-center px-[14px] py-[6px] rounded-full shrink-0 border text-[11px] font-bold whitespace-nowrap ${
                 activeFilter === f
-                  ? 'bg-[#0570db] border-[#0570db] text-white'
+                  ? 'bg-[#bde3f6] border-[#bde3f6] text-[#285b78]'
                   : 'bg-white border-[#d6e9f8] text-[#4a6080]'
               }`}
             >
@@ -136,19 +125,19 @@ export default function MyBadgesScreen({ onNavigate }: Props) {
               key={badge.name}
               className="bg-white rounded-[24px] p-4 flex flex-col items-center relative overflow-hidden"
               style={{
-                border: badge.isNew ? '0.8px solid #6acf98' : badge.unlocked ? '0.8px solid #d6e9f8' : '0.8px solid #e8edf2',
+                border: badge.isNew ? '1px solid #c0e2d2' : '1px solid #dce3f1',
                 opacity: badge.unlocked ? 1 : 0.75,
                 boxShadow: badge.unlocked ? '0px 2px 8px rgba(5,112,219,0.07)' : 'none',
               }}
             >
               {badge.isNew && (
-                <div className="absolute top-2.5 right-2.5 bg-[#6acf98] rounded-full px-1.5 py-0.5">
-                  <p className="font-black text-[9px] text-white">NEW</p>
+                <div className="absolute top-2.5 right-2.5 bg-[#d4eee3] rounded-full px-1.5 py-0.5">
+                  <p className="font-bold text-[9px] text-[#2f6853]">NEW</p>
                 </div>
               )}
               <div
                 className="w-[56px] h-[56px] rounded-full flex items-center justify-center mb-2"
-                style={{ background: badge.gradient ?? '#f0f3f6' }}
+                style={{ background: badge.unlocked ? ['#e1f1fa', '#fff0d9', '#e5eafa', '#fbe5de', '#e1f1fa', '#fff0d9', '#e1f1e7', '#e1f1fa', '#e1f1e7'][index] ?? '#e1f1fa' : '#f0f3f6' }}
               >
                 <span className="text-[24px]">{badge.emoji}</span>
               </div>
@@ -168,7 +157,7 @@ export default function MyBadgesScreen({ onNavigate }: Props) {
                     <p className="font-bold text-[9px] text-[#0570db]">{badge.progress}%</p>
                   </div>
                   <div className="h-[6px] bg-[#e8edf2] rounded-full overflow-hidden">
-                    <div className="h-full bg-[#0570db] rounded-full" style={{ width: `${badge.progress}%` }} />
+                    <div className="h-full bg-[#8bc6e4] rounded-full" style={{ width: `${badge.progress}%` }} />
                   </div>
                 </div>
               )}
@@ -176,6 +165,7 @@ export default function MyBadgesScreen({ onNavigate }: Props) {
           ); })}
         </div>
       </div>
+      <BottomNav active="records" onTabChange={tab => onNavigate(tab)} />
     </div>
   );
 }
