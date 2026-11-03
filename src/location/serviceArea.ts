@@ -15,13 +15,13 @@ export function areaState(status: ServiceAreaState['status'], message: string): 
   return { status, message, address: null, regionName: null, canRecommendNearby: false };
 }
 
-export function locationIssue(point: LocationFix, accuracy: number | null, now: number): string | null {
+export function locationIssue(point: LocationFix, accuracy: number | null, now: number, allowApproximate = false): string | null {
   if (![point.latitude, point.longitude, point.timestamp].every(Number.isFinite)
     || Math.abs(point.latitude) > 90 || Math.abs(point.longitude) > 180 || point.timestamp > now + 5000) {
     return '위치 정보를 확인할 수 없습니다. 위치를 다시 확인해 주세요.';
   }
   if (now - point.timestamp >= MAX_LOCATION_AGE_MS) return '위치 정보가 오래되었습니다. 위치를 다시 확인해 주세요.';
-  if (accuracy === null || !Number.isFinite(accuracy) || accuracy < 0 || accuracy > MAX_LOCATION_ACCURACY_METERS) {
+  if (accuracy === null || !Number.isFinite(accuracy) || accuracy < 0 || (!allowApproximate && accuracy > MAX_LOCATION_ACCURACY_METERS)) {
     return '위치 오차가 커 서비스 지역을 확인할 수 없습니다. 실외에서 위치를 다시 확인해 주세요.';
   }
   return null;

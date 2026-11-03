@@ -107,6 +107,35 @@ test('structured province determines Busan; address text and empty results do no
   assert.equal(policy.classifyRegion({ address_name: '부산광역시' }).status, 'error');
 });
 
+test('approximate Busan coordinates allow service access while precise nearby recommendations remain unavailable', async () => {
+  const s = setup();
+  s.input.accuracy = 2000;
+  s.input.allowApproximate = true;
+  assert.equal(s.render().status, 'checking');
+  await s.advance(250);
+  s.requests[0].resolve(busan);
+  await s.advance(0);
+  const area = s.render();
+  assert.equal(area.status, 'inside');
+  assert.equal(area.canRecommendNearby, false);
+  assert.match(area.message, /부산 지역으로 확인/);
+  s.input.accuracy = 10;
+  assert.equal(s.render().canRecommendNearby, true);
+});
+
+test('approximate access still rejects other regions, stale fixes and invalid accuracy', async () => {
+  const s = setup();
+  s.input.accuracy = 2000;
+  s.input.allowApproximate = true;
+  s.render(); await s.advance(250);
+  s.requests[0].resolve(seoul); await s.advance(0);
+  assert.equal(s.render().status, 'outside');
+  s.input.point.timestamp -= policy.MAX_LOCATION_AGE_MS;
+  assert.equal(s.render().status, 'error');
+  const point = {latitude:35.15,longitude:129.13,timestamp:Date.now()};
+  for (const accuracy of [null, NaN, -1]) assert.ok(policy.locationIssue(point,accuracy,Date.now(),true));
+});
+
 test('invalid, inaccurate, old, and future GPS fixes are kept separate from outside service', () => {
   const now = Date.now();
   const point = { latitude: 35.15, longitude: 129.13, timestamp: now };

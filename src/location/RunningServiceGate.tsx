@@ -5,7 +5,8 @@ import { useServiceArea } from './ServiceAreaProvider';
 export function RunningServiceGate({ children, onBack }: { children: ReactNode; onBack: () => void }) {
   const run = useRun();
   const area = useServiceArea();
-  const previouslyAllowed = useRef(false);
+  // Active sessions were started through the Busan gate on the previous screen.
+  const previouslyAllowed = useRef(run.mode === 'running' || run.mode === 'locating');
   const [saveError, setSaveError] = useState('');
   const active = run.mode === 'running' || run.mode === 'locating';
   const allowed = area.status === 'inside' || (previouslyAllowed.current && active

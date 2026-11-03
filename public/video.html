@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#edf4fb" />
+    <meta name="description" content="뛴데이 소개 영상을 만나보세요." />
+    <meta property="og:title" content="뛴데이 영상" />
+    <meta property="og:description" content="뛴데이 소개 영상을 만나보세요." />
+    <title>뛴데이 영상</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        background: #edf4fb;
+        color: #17314d;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      main { width: min(100%, 960px); margin: 0 auto; padding: 24px 16px 40px; }
+      header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+      .brand { color: #285b78; font-size: 22px; font-weight: 800; text-decoration: none; }
+      .home { border-radius: 999px; background: white; padding: 10px 16px; color: #285b78; font-size: 13px; text-decoration: none; }
+      .card { overflow: hidden; border: 1px solid #dce3f1; border-radius: 24px; background: white; }
+      .heading { padding: 20px; background: #bde3f6; }
+      h1 { margin: 0; font-size: clamp(20px, 4vw, 28px); }
+      .heading p { margin: 8px 0 0; color: #48718b; font-size: 14px; line-height: 1.6; }
+      .stage { display: grid; place-items: center; background: #10243a; }
+      video { display: block; width: 100%; max-height: 72dvh; aspect-ratio: 16 / 9; object-fit: contain; }
+      .notice { padding: 40px 20px; text-align: center; color: #61758c; }
+      .notice[hidden] { display: none; }
+      .notice p { margin: 0 0 16px; line-height: 1.7; }
+      button { border: 0; border-radius: 999px; background: #bde3f6; color: #285b78; padding: 12px 20px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+      a:focus-visible, button:focus-visible, video:focus-visible { outline: 3px solid #0570db; outline-offset: 3px; }
+      .caption { margin: 0; padding: 16px 20px; color: #61758c; font-size: 12px; line-height: 1.6; }
+      @media (max-width: 480px) {
+        main { padding: 20px 12px; }
+        header { margin-bottom: 18px; }
+        .heading { padding: 18px 16px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <a class="brand" href="./" aria-label="뛴데이 홈으로">뛴데이</a>
+        <a class="home" href="./">앱으로 이동</a>
+      </header>
+      <section class="card" aria-labelledby="video-title">
+        <div class="heading">
+          <h1 id="video-title">뛴데이 소개 영상</h1>
+          <p>달리는 일상, 더 즐겁게</p>
+        </div>
+        <div class="stage" id="stage">
+          <video id="video" controls playsinline preload="metadata" aria-label="뛴데이 소개 영상">
+            이 브라우저는 동영상 재생을 지원하지 않습니다.
+          </video>
+        </div>
+        <div id="notice" class="notice" role="status" hidden>
+          <p>영상을 불러오지 못했어요.<br />잠시 후 다시 시도해 주세요.</p>
+          <button id="retry" type="button">다시 불러오기</button>
+        </div>
+        <p class="caption" id="caption">재생 버튼을 눌러 영상을 감상하세요. 전체 화면으로도 볼 수 있어요.</p>
+      </section>
+    </main>
+    <script>
+      const video = document.getElementById('video');
+      const stage = document.getElementById('stage');
+      const notice = document.getElementById('notice');
+      const caption = document.getElementById('caption');
+      video.addEventListener('error', () => {
+        stage.hidden = true;
+        stage.style.display = 'none';
+        notice.hidden = false;
+        caption.hidden = true;
+      });
+      video.addEventListener('loadedmetadata', () => {
+        stage.hidden = false;
+        stage.style.display = '';
+        notice.hidden = true;
+        caption.hidden = false;
+        if (video.videoWidth && video.videoHeight) video.style.aspectRatio = `${video.videoWidth} / ${video.videoHeight}`;
+      });
+      document.getElementById('retry').addEventListener('click', () => {
+        stage.hidden = false;
+        stage.style.display = '';
+        notice.hidden = true;
+        caption.hidden = false;
+        video.load();
+      });
+      video.src = './videos/intro.mp4';
+    </script>
+  </body>
+</html>

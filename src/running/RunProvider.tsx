@@ -140,7 +140,7 @@ export function RunProvider({ children }: { children: ReactNode }) {
         || Math.abs(latitude) > 90 || Math.abs(longitude) > 180 || acc < 0
         || Date.now() - position.timestamp > 30000 || position.timestamp > Date.now() + 5000) return;
       setAccuracy(acc);
-      if (acc > 50) { const error = 'GPS 정확도가 낮습니다. 탁 트인 실외에서 기다려 주세요.'; setLocationError(error); setMessage(error); return; }
+      if (acc > 50) { setLocationError(null); setMessage('GPS 정확도가 낮습니다. 탁 트인 실외에서 기다려 주세요.'); return; }
       const point: Point = { latitude, longitude, timestamp: position.timestamp, segment: sessionRef.current.segment };
       setCurrent(point);
       setLocationError(null);

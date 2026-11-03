@@ -8,14 +8,15 @@ interface Input {
   locating: boolean;
   locationError: string | null;
   enabled: boolean;
+  allowApproximate?: boolean;
 }
 
 export function useServiceAreaState(input: Input, lookup = lookupRegion): ServiceAreaState {
-  const { point, accuracy, locating, locationError, enabled } = input;
+  const { point, accuracy, locating, locationError, enabled, allowApproximate = false } = input;
   const [resolution, setResolution] = useState<{ key: string; state: ServiceAreaState } | null>(null);
   const [, expire] = useState(0);
   const cache = useRef<{ latitude: number; longitude: number; at: number; region: RegionInfo } | null>(null);
-  const issue = point ? locationIssue(point, accuracy, Date.now()) : null;
+  const issue = point ? locationIssue(point, accuracy, Date.now(), allowApproximate) : null;
   const key = point ? `${point.latitude}:${point.longitude}:${point.timestamp}` : '';
   const blocked = !enabled ? areaState('idle', '')
     : locating ? areaState('locating', '현재 위치를 확인하고 있습니다…')
@@ -49,5 +50,8 @@ export function useServiceAreaState(input: Input, lookup = lookupRegion): Servic
   }, [key, accuracy, blockedStatus, lookup]);
 
   // A new GPS fix immediately hides the previous region, before the effect runs.
-  return blocked ?? (resolution?.key === key ? resolution.state : areaState('checking', '서비스 지역을 확인하고 있습니다…'));
+  const state = blocked ?? (resolution?.key === key ? resolution.state : areaState('checking', '서비스 지역을 확인하고 있습니다…'));
+  const preciseIssue = point ? locationIssue(point, accuracy, Date.now()) : null;
+  return state.status === 'inside' && preciseIssue ? { ...state, canRecommendNearby: false,
+    message: '부산 지역으로 확인되었습니다. 위치 오차가 커 지도와 경로 기록이 부정확할 수 있습니다.' } : state;
 }
