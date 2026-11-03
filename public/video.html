@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <meta name="theme-color" content="#edf4fb" />
-    <meta name="description" content="뛴데이 소개 영상을 만나보세요." />
+    <meta name="description" content="뛴데이 소개 영상과 광고 영상을 만나보세요." />
     <meta property="og:title" content="뛴데이 영상" />
-    <meta property="og:description" content="뛴데이 소개 영상을 만나보세요." />
+    <meta property="og:description" content="뛴데이 소개 영상과 광고 영상을 만나보세요." />
     <title>뛴데이 영상</title>
     <style>
       * { box-sizing: border-box; }
@@ -23,8 +23,9 @@
       .brand { color: #285b78; font-size: 22px; font-weight: 800; text-decoration: none; }
       .home { border-radius: 999px; background: white; padding: 10px 16px; color: #285b78; font-size: 13px; text-decoration: none; }
       .card { overflow: hidden; border: 1px solid #dce3f1; border-radius: 24px; background: white; }
+      .card + .card { margin-top: 24px; }
       .heading { padding: 20px; background: #bde3f6; }
-      h1 { margin: 0; font-size: clamp(20px, 4vw, 28px); }
+      h1, h2 { margin: 0; font-size: clamp(20px, 4vw, 28px); }
       .heading p { margin: 8px 0 0; color: #48718b; font-size: 14px; line-height: 1.6; }
       .stage { display: grid; place-items: center; background: #10243a; }
       video { display: block; width: 100%; max-height: 72dvh; aspect-ratio: 16 / 9; object-fit: contain; }
@@ -53,7 +54,7 @@
           <p>달리는 일상, 더 즐겁게</p>
         </div>
         <div class="stage" id="stage">
-          <video id="video" controls playsinline preload="metadata" aria-label="뛴데이 소개 영상">
+          <video id="video" data-src="./videos/intro.mp4" controls playsinline preload="metadata" aria-label="뛴데이 소개 영상">
             이 브라우저는 동영상 재생을 지원하지 않습니다.
           </video>
         </div>
@@ -63,12 +64,30 @@
         </div>
         <p class="caption" id="caption">재생 버튼을 눌러 영상을 감상하세요. 전체 화면으로도 볼 수 있어요.</p>
       </section>
+      <section class="card" aria-labelledby="ad-video-title">
+        <div class="heading">
+          <h2 id="ad-video-title">뛴데이 광고 영상</h2>
+          <p>뛴데이와 함께 달려보세요</p>
+        </div>
+        <div class="stage">
+          <video data-src="./videos/advertisement.mp4" controls playsinline preload="metadata" aria-label="뛴데이 광고 영상">
+            이 브라우저는 동영상 재생을 지원하지 않습니다.
+          </video>
+        </div>
+        <div class="notice" role="status" hidden>
+          <p>영상을 불러오지 못했어요.<br />잠시 후 다시 시도해 주세요.</p>
+          <button type="button">다시 불러오기</button>
+        </div>
+        <p class="caption">재생 버튼을 눌러 광고 영상을 감상하세요. 전체 화면으로도 볼 수 있어요.</p>
+      </section>
     </main>
     <script>
-      const video = document.getElementById('video');
-      const stage = document.getElementById('stage');
-      const notice = document.getElementById('notice');
-      const caption = document.getElementById('caption');
+      const videos = document.querySelectorAll('video');
+      for (const video of videos) {
+      const card = video.closest('.card');
+      const stage = card.querySelector('.stage');
+      const notice = card.querySelector('.notice');
+      const caption = card.querySelector('.caption');
       video.addEventListener('error', () => {
         stage.hidden = true;
         stage.style.display = 'none';
@@ -82,14 +101,18 @@
         caption.hidden = false;
         if (video.videoWidth && video.videoHeight) video.style.aspectRatio = `${video.videoWidth} / ${video.videoHeight}`;
       });
-      document.getElementById('retry').addEventListener('click', () => {
+      notice.querySelector('button').addEventListener('click', () => {
         stage.hidden = false;
         stage.style.display = '';
         notice.hidden = true;
         caption.hidden = false;
         video.load();
       });
-      video.src = './videos/intro.mp4';
+      video.addEventListener('play', () => {
+        for (const other of videos) if (other !== video) other.pause();
+      });
+      video.src = video.dataset.src;
+      }
     </script>
   </body>
 </html>
